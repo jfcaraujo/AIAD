@@ -11,6 +11,6 @@ public class HelloWorldAgent extends Agent {
     }
 
     public void takedown(){
-        System.out.println("Morri");
+        System.out.println("Goodbye!");
     }
 }
