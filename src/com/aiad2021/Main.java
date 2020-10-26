@@ -19,11 +19,9 @@ public class Main {
         ContainerController cc = rt.createMainContainer(p);
 
         //Load agents and products from world file
-        try {
-            World w = new World("../world.csv","../products.csv");
-        } catch (StaleProxyException e) {
-            e.printStackTrace();
-        }
+
+        World w = new World("world.csv","products.csv");
+
 
         //When program ends save its state
         //todo
