@@ -28,8 +28,6 @@ public class User extends Agent {
 
         System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
 
-
-
     }
 
 }
