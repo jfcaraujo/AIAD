@@ -39,7 +39,7 @@ public class User extends Agent {
 
 
     //todo see if its worth having a folder for all the behaviours
-    //usar request para criar novos leiloes, pedir listagem de leiloes e dar join,
+    //usar request para criar novos leiloes, pedir listagem de leiloes e dar join
     //usar inform para msg de accept e ganhar ou perder
     class UserListeningBehaviour extends CyclicBehaviour {
 
@@ -48,13 +48,17 @@ public class User extends Agent {
         public void action(){
             ACLMessage msg = receive();
             if(msg != null) {
-                if(msg.getPerformative() == ACLMessage.INFORM){
+                if(msg.getPerformative() == ACLMessage.REQUEST){
                     System.out.println(msg);
 
                     String[] parts = msg.getContent().split(" ");
                     //create new auction
                     try {
-                        world.createAuctionAgent(Integer.parseInt(parts[0]), Double.parseDouble(parts[1]));
+                        Object[] params = {Integer.parseInt(parts[0]),Double.parseDouble(parts[1])};
+                        //Agent path on jade = com.aiad2021.Agents.
+                        AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),"com.aiad2021.Agents.Auction",params);
+                        ac.start();
+                       // this.agentControllers.add(ac); //todo idk what is this used for
                     } catch (StaleProxyException e) {
                         e.printStackTrace();
                     }

@@ -54,7 +54,7 @@ public class World {
     }
 
     //create agents
-    public void createUserAgent(int id, String Username) throws StaleProxyException {
+    private void createUserAgent(int id, String Username) throws StaleProxyException {
 
         //params to be passed on the agent creation
         Object[] params = {id,Username};
@@ -66,12 +66,12 @@ public class World {
     }
 
     //create agents
-    public void createAuctionAgent(int id, double basePrice) throws StaleProxyException { //todo add args
+    private void createAuctionAgent(int id, double basePrice) throws StaleProxyException { //todo add args
 
         //params to be passed on the agent creation
         Object[] params = {id,basePrice};
         //Agent path on jade = com.aiad2021.Agents.
-        AgentController ac = this.mainContainer.createNewAgent(String.valueOf(id+basePrice),"com.aiad2021.Agents.Auction",params);
+        AgentController ac = this.mainContainer.createNewAgent(String.valueOf(id),"com.aiad2021.Agents.Auction",params);
         ac.start();
         this.agentControllers.add(ac);
 
