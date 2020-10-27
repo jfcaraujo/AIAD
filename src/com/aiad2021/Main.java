@@ -12,15 +12,16 @@ public class Main {
 
         //This will start JADE Gui
         Runtime rt = Runtime.instance();
-        Profile p = new ProfileImpl();
-        p.setParameter(Profile.GUI, "true");
+        Profile profile = new ProfileImpl();
+        profile.setParameter(Profile.GUI, "true");
+
 
         //This will create the main controller
-        ContainerController cc = rt.createMainContainer(p);
+        ContainerController cc = rt.createMainContainer(profile);
 
         //Load agents and products from world file
 
-        World w = new World("world.csv","products.csv");
+        World w = new World(profile,cc,"world.csv","products.csv");
 
 
         //When program ends save its state

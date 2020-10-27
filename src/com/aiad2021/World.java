@@ -25,12 +25,18 @@ public class World {
     private String worldFilename;
     private String productsFilename;
 
-    public World(String worldFilename,String productsFilename ) {
+    public World(){
+
+    }
+
+    public World(Profile profile,ContainerController cc, String worldFilename,String productsFilename ) {
 
         //Jade components
         this.runtime = Runtime.instance();
-        this.profile = new ProfileImpl();
-        this.mainContainer = this.runtime.createMainContainer(this.profile);
+        //this.profile = new ProfileImpl(); //old
+        this.profile = profile;
+        //this.mainContainer = this.runtime.createMainContainer(this.profile); //old
+        this.mainContainer = cc;
         this.agentControllers = new ArrayList<>();
 
         //Files
@@ -48,12 +54,24 @@ public class World {
     }
 
     //create agents
-    private void createUserAgent(int id, String Username) throws StaleProxyException {
+    public void createUserAgent(int id, String Username) throws StaleProxyException {
 
         //params to be passed on the agent creation
         Object[] params = {id,Username};
         //Agent path on jade = com.aiad2021.Agents.User
         AgentController  ac = this.mainContainer.createNewAgent(id + Username,"com.aiad2021.Agents.User",params);
+        ac.start();
+        this.agentControllers.add(ac);
+
+    }
+
+    //create agents
+    public void createAuctionAgent(int id, double basePrice) throws StaleProxyException { //todo add args
+
+        //params to be passed on the agent creation
+        Object[] params = {id,basePrice};
+        //Agent path on jade = com.aiad2021.Agents.
+        AgentController ac = this.mainContainer.createNewAgent(String.valueOf(id+basePrice),"com.aiad2021.Agents.Auction",params);
         ac.start();
         this.agentControllers.add(ac);
 
@@ -68,7 +86,6 @@ public class World {
 
         while (reader.hasNextLine()){
             String data = reader.nextLine();
-            System.out.println(data);
             //process line
 
             String[] parts = data.split(",");
@@ -79,7 +96,7 @@ public class World {
                     break;
 
                 case "AUCTION":
-                    System.out.println("TODO");
+                    createAuctionAgent(Integer.parseInt(parts[1]), Double.parseDouble(parts[2]));
                     break;
 
                 default: System.exit(1);
