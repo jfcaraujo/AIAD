@@ -2,16 +2,10 @@ package com.aiad2021.Agents;
 
 import com.aiad2021.World;
 import jade.core.Agent;
-import jade.core.Profile;
-import jade.core.Runtime;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
-
-import java.util.ArrayList;
 
 public class User extends Agent {
 

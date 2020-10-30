@@ -4,7 +4,8 @@ import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.ContainerController;
 import jade.core.Runtime;
-import jade.wrapper.StaleProxyException;
+
+import java.util.Scanner;
 
 public class Main {
 
@@ -15,14 +16,12 @@ public class Main {
         Profile profile = new ProfileImpl();
         profile.setParameter(Profile.GUI, "true");
 
-
         //This will create the main controller
         ContainerController cc = rt.createMainContainer(profile);
 
         //Load agents and products from world file
 
-        World w = new World(profile,cc,"world.csv","products.csv");
-
+        World w = new World(cc,"world.csv","products.csv");
 
         //When program ends save its state
         //todo

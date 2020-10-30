@@ -8,8 +8,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -18,26 +17,28 @@ public class World {
     //jade components
     private Runtime runtime;
     private Profile profile;
-    private ContainerController mainContainer;
-    private ArrayList<AgentController> agentControllers;
-
+    private ContainerController auctionContainer;
+    private ArrayList<AgentController> userAgentControllers;
+    private ArrayList<AgentController> auctionAgentControllers;
     //file strings
     private String worldFilename;
     private String productsFilename;
 
-    public World(){
+    public World(){}
 
-    }
-
-    public World(Profile profile,ContainerController cc, String worldFilename,String productsFilename ) {
+    public World(ContainerController cc,String worldFilename,String productsFilename ) {
 
         //Jade components
         this.runtime = Runtime.instance();
-        //this.profile = new ProfileImpl(); //old
-        this.profile = profile;
+        this.profile = new ProfileImpl(); //old
+        //this.profile = profile;
         //this.mainContainer = this.runtime.createMainContainer(this.profile); //old
-        this.mainContainer = cc;
-        this.agentControllers = new ArrayList<>();
+        this.auctionContainer = cc;
+        //todo tentar permitir criaçao num container proprio para auctions
+        //this.auctionContainer = this.runtime.createAgentContainer(this.profile);
+
+        this.userAgentControllers = new ArrayList<>();
+        this.auctionAgentControllers = new ArrayList<>();
 
         //Files
         this.worldFilename = worldFilename;
@@ -45,7 +46,9 @@ public class World {
 
         //Loading
         this.Load(); //Throws exception if fails
-    }
+
+
+         }
 
     private void Load(){
 
@@ -59,21 +62,22 @@ public class World {
         //params to be passed on the agent creation
         Object[] params = {id,Username};
         //Agent path on jade = com.aiad2021.Agents.User
-        AgentController  ac = this.mainContainer.createNewAgent(id + Username,"com.aiad2021.Agents.User",params);
+        ContainerController cc = this.runtime.createAgentContainer(this.profile);
+        AgentController  ac = cc.createNewAgent(id + Username,"com.aiad2021.Agents.User",params);
+        //AgentController  ac = cc.createNewAgent(id + Username,"com.aiad2021.Agents.User",params);
         ac.start();
-        this.agentControllers.add(ac);
+        this.userAgentControllers.add(ac);
 
     }
 
     //create agents
     private void createAuctionAgent(int id, double basePrice) throws StaleProxyException { //todo add args
-
         //params to be passed on the agent creation
         Object[] params = {id,basePrice};
         //Agent path on jade = com.aiad2021.Agents.
-        AgentController ac = this.mainContainer.createNewAgent(String.valueOf(id),"com.aiad2021.Agents.Auction",params);
+        AgentController ac = auctionContainer.createNewAgent("Auction:"+id,"com.aiad2021.Agents.Auction",params);
         ac.start();
-        this.agentControllers.add(ac);
+        this.auctionAgentControllers.add(ac);
 
     }
 
@@ -108,10 +112,6 @@ public class World {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
-    }
-
-    private void processProductsFile(){
-        //todo
     }
 
 }
