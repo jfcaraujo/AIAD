@@ -6,7 +6,6 @@ import jade.core.Runtime;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
@@ -40,7 +39,6 @@ public class User extends Agent {
         System.out.println( "Id: " + this.id + " Username: "+this.Username+"\n");
 
         addBehaviour(new UserListeningBehaviour());
-
 
         DFSubscribe();
 
@@ -93,7 +91,7 @@ public class User extends Agent {
 
         SearchConstraints sc = new SearchConstraints();
         // We want to receive 10 results at most
-        sc.setMaxResults(new Long(10));
+        sc.setMaxResults(10L);
 
         addBehaviour(new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
@@ -101,8 +99,7 @@ public class User extends Agent {
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
                     if (results.length > 0) {
-                        for (int i = 0; i < results.length; ++i) {
-                            DFAgentDescription dfd = results[i];
+                        for (DFAgentDescription dfd : results) {
                             AID provider = dfd.getName();
                             // The same agent may provide several services; we are only interested
                             // in the auction-listing one
@@ -111,7 +108,7 @@ public class User extends Agent {
                                 ServiceDescription sd = (ServiceDescription) it.next();
                                 if (sd.getType().equals("auction-listing")) {
                                     System.out.println("auction-listing service found:");
-                                    System.out.println("- Service \""+sd.getName()+"\" provided by agent "+provider.getName());
+                                    System.out.println("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                                 }
                             }
                         }
@@ -137,13 +134,12 @@ public class User extends Agent {
 
             SearchConstraints sc = new SearchConstraints();
             // We want to receive 10 results at most
-            sc.setMaxResults(new Long(10));
+            sc.setMaxResults(10L);
 
             DFAgentDescription[] results = DFService.search(this, template, sc);
             if (results.length > 0) {
                 System.out.println("Agent "+getLocalName()+" found the following auction-listing services:");
-                for (int i = 0; i < results.length; ++i) {
-                    DFAgentDescription dfd = results[i];
+                for (DFAgentDescription dfd : results) {
                     AID provider = dfd.getName();
                     // The same agent may provide several services; we are only interested
                     // in the weather-forcast one
@@ -151,7 +147,7 @@ public class User extends Agent {
                     while (it.hasNext()) {
                         ServiceDescription sd = (ServiceDescription) it.next();
                         if (sd.getType().equals("auction-listing")) {
-                            System.out.println("- Service \""+sd.getName()+"\" provided by agent "+provider.getName());
+                            System.out.println("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                         }
                     }
                 }

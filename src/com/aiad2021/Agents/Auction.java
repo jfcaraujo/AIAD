@@ -2,12 +2,16 @@ package com.aiad2021.Agents;
 
 import com.aiad2021.Product;
 import jade.core.Agent;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREResponder;
 
 import java.util.ArrayList;
 
@@ -73,10 +77,58 @@ public class Auction extends Agent {
             fe.printStackTrace();
         }
 
+        addBehaviour(new notifyWinner(this,(this.duration+5)*1000));
+
     }
 
+    //notify winner
+    class notifyWinner extends WakerBehaviour{
+
+        private Agent a;
+
+        public notifyWinner(Agent a, long timeout) {
+            super(a, timeout);
+            this.a = a;
+        }
+
+        @Override
+        protected void onWake() {
+            super.onWake();
+            System.out.println("Auction:" + this.a.getAID()+ " ended");
+            //todo message the winner
+            this.a.doDelete();
+        }
+    }
     //read messages
 
+    //FIPA
+    class FIPARequestResp extends AchieveREResponder {
+
+        public FIPARequestResp(Agent a, MessageTemplate mt) {
+            super(a, mt);
+        }
+
+        protected ACLMessage handleRequest(ACLMessage request) {
+            ACLMessage reply = request.createReply();
+            // ...
+            reply.setPerformative(ACLMessage.AGREE);
+            return reply;
+        }
+
+        protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+            ACLMessage result = request.createReply();
+            // ...
+
+            result.setPerformative(ACLMessage.INFORM);
+            result.setContent("here you go!");
+            //posso enviar tbm objetos se quiser
+            //result.setContentObject(new jade.util.Vector());
+
+
+            return result;
+        }
+
+    }
     //subscribe
 
 }
