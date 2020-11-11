@@ -1,8 +1,8 @@
 package com.aiad2021.Agents;
 
 import com.aiad2021.World;
-import jade.core.AID;
-import jade.core.Agent;
+import jade.core.*;
+import jade.core.Runtime;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -23,8 +23,10 @@ public class User extends Agent {
     private String Username;
 
     @Override
-    protected void setup() {
+    protected void setup(){
 
+        Runtime rt = Runtime.instance();
+        Profile p1 = new ProfileImpl();
        //used to get parameters passes on intilialization
         Object[] args = this.getArguments();
 
@@ -37,8 +39,10 @@ public class User extends Agent {
         System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
         System.out.println( "Id: " + this.id + " Username: "+this.Username+"\n");
 
-        DFSubscribe();
         addBehaviour(new UserListeningBehaviour());
+
+
+        DFSubscribe();
 
     }
 
@@ -46,6 +50,8 @@ public class User extends Agent {
     //todo see if its worth having a folder for all the behaviours
     //usar request para criar novos leiloes, pedir listagem de leiloes e dar join
     //usar inform para msg de accept e ganhar ou perder
+
+    //todo adapt to be used on the GUI
     class UserListeningBehaviour extends CyclicBehaviour {
 
         public void action(){
@@ -57,9 +63,8 @@ public class User extends Agent {
                     String[] parts = msg.getContent().split(" ");
                     //create new auction
                     try {
-                        Object[] params = {Integer.parseInt(parts[0]),Double.parseDouble(parts[1])};
-                        //Agent path on jade = com.aiad2021.Agents.
-                        //todo create the auction in the main cotroller
+                        Object[] params = {Integer.parseInt(parts[0]),parts[1], Integer.parseInt(parts[2]), Double.parseDouble(parts[3]), Integer.parseInt(parts[4]),this};
+                        //Agent path on jade = com.aiad2021.Agents
                         AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),"com.aiad2021.Agents.Auction",params);
                         ac.start();
                        // this.agentControllers.add(ac); //todo idk what is this used for

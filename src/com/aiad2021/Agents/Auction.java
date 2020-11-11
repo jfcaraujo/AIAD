@@ -9,33 +9,41 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 
-import java.util.Date;
+import java.util.ArrayList;
 
 public class Auction extends Agent {
 
     private int id;
-    private Date startTime;
-    private Date endDate;
+
+    private int duration;
+    private String type;
     private Product product;
     private double basePrice;
-    private double lastPrice;
+    private ArrayList<Double> bids;
+    private User owner;
     private User currentWinner;
+
+    private ArrayList<User> participants;
 
     //Yellow Pages
     private String serviceName;
+
     @Override
     protected void setup(){
         //used to get parameters passes on intilialization
         Object[] args = this.getArguments();
 
         //init class
-        this.id = (int) args[0];
-        this.startTime = new Date(); //TODO
-        this.endDate = new Date(); //TODO
-        this.product = new Product(); //TODO
-        this.basePrice = (double) args[1]; //todo change
-        this.lastPrice = 0; //todo
+       this.id = (int) args[0];
+       this.type = (String) args[1];
+       this.duration = (int) args[2];
+       this.basePrice = (double) args[3]; //todo change
+       this.product = new Product(); //TODO pass the id
+       //this.owner = (User) args[5];
+
         this.currentWinner = null; //todo
+        this.bids = new ArrayList<>();
+        this.participants = new ArrayList<>();
 
         System.out.println("My local name is " + getAID().getLocalName());
         System.out.println("My GUID is " + getAID().getName());
@@ -56,7 +64,7 @@ public class Auction extends Agent {
             sd.addOntologies("auction-listing-ontology");
             // Agents that want to use this service need to "speak" the FIPA-SL language
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
-            sd.addProperties(new Property("type", "english")); //todo adaptar consoante o tipo de leilao
+            sd.addProperties(new Property("type", type));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
@@ -64,5 +72,11 @@ public class Auction extends Agent {
         catch (FIPAException fe) {
             fe.printStackTrace();
         }
+
     }
+
+    //read messages
+
+    //subscribe
+
 }
