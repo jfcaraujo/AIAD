@@ -75,9 +75,17 @@ public class User extends Agent {
     }
     //
     private void joinAuction(String auctionId){
-        //todo parse msg
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),"Auction:1",this.auctionsList.get("Auction:1")));
-        //todo add notify behaviour
+        makeBid(auctionId);
+        subscribeAuction();
+    }
+
+    private void makeBid(String auctionId){
+        //todo create bid value for the maesage content
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),auctionId,this.auctionsList.get("Auction:1")));
+    }
+
+    private void subscribeAuction(){
+        //todo
     }
 
     // Bid
