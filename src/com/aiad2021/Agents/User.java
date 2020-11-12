@@ -54,6 +54,7 @@ public class User extends Agent {
         DFSearch();
         DFSubscribe();
 
+        //todo delete - debug
         System.out.println(auctionsList.get("Auction:1").getType());
 
         addBehaviour(new UserListeningBehaviour());
@@ -63,14 +64,16 @@ public class User extends Agent {
     // todo see if its worth having a folder for all the behaviours
     // usar request para criar novos leiloes, pedir listagem de leiloes e dar join
     // usar inform para msg de accept e ganhar ou perder
-
     // todo adapt to be used on the GUI
     class UserListeningBehaviour extends CyclicBehaviour {
 
         public void action() {
             ACLMessage msg = receive();
             if (msg != null) {
+
                 switch (msg.getPerformative()) {
+
+
                     case ACLMessage.REQUEST:
                         System.out.println(msg);
 
@@ -88,7 +91,10 @@ public class User extends Agent {
                             e.printStackTrace();
                         }
                         break;
-                    case ACLMessage.INFORM:
+                    case ACLMessage.PROPOSE:
+                        //todo replace with gui join
+                        System.out.println(msg);
+                        joinAuction("Auction:1"); //replace with auction ID
                         break;
 
                 }
@@ -102,41 +108,57 @@ public class User extends Agent {
         }
     }
 
-    // Bid
-    class FIPARequestInit extends AchieveREInitiator {
+    //
+    private void joinAuction(String auctionId){
+        //todo parse msg
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),"Auction:1",this.auctionsList.get("Auction:1")));
+        //todo add notify behaviour
+    }
 
-        public FIPARequestInit(Agent a, ACLMessage msg) {
+    // Bid
+    class FIPARequestBid extends AchieveREInitiator {
+
+        private String auctionId;
+        private AuctionInfo auctionInfo;
+        private String msgContent;
+
+        public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo) {
             super(a, msg);
+            this.auctionId = auctionId;
+            this.auctionInfo = auctionInfo;
+
+            this.msgContent = String.valueOf(this.auctionInfo.getWinningPrice() + 1.0);
+
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<ACLMessage>();
             // ...
 
-            msg.addReceiver(new AID("qqq", false));
-            msg.setContent("can you do this for me?");
+            msg.addReceiver(new AID(this.auctionId, false));
+            msg.setContent(this.msgContent);
 
             v.add(msg);
             return v;
         }
 
         protected void handleAgree(ACLMessage agree) {
-            // ...
+            //do nothing
             System.out.println(agree);
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            // ...
+            //todo try again
             System.out.println(refuse);
         }
 
         protected void handleInform(ACLMessage inform) {
-            // ...
+            //todo idk
             System.out.println(inform);
         }
 
         protected void handleFailure(ACLMessage failure) {
-            // ...
+            //todo prolly try again
             System.out.println(failure);
         }
 
@@ -272,6 +294,9 @@ public class User extends Agent {
     // handles input from user
     public void handleMessage(String message) {
         System.out.println(message);
+        if(message == "join Auction:1"){ //todo adapt to bid on the auction i type
+           //joinAuction("Auction:1");//todo parse acution id
+        }
     }
 
     private double getNewBid(Bid bid) {
