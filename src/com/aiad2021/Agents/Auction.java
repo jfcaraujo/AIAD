@@ -123,6 +123,7 @@ public class Auction extends Agent {
             ACLMessage reply = request.createReply();
             // ...
             reply.setPerformative(ACLMessage.AGREE);
+            System.out.println(request.getContent());
             return reply;
         }
 
