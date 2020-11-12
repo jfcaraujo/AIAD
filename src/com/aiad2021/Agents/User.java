@@ -57,57 +57,22 @@ public class User extends Agent {
         //todo delete - debug
         System.out.println(auctionsList.get("Auction:1").getType());
 
-        addBehaviour(new UserListeningBehaviour());
+        //todo create a behaviour to read the winner message
 
     }
 
-    // todo see if its worth having a folder for all the behaviours
-    // usar request para criar novos leiloes, pedir listagem de leiloes e dar join
-    // usar inform para msg de accept e ganhar ou perder
-    // todo adapt to be used on the GUI
-    class UserListeningBehaviour extends CyclicBehaviour {
+    private void createAuction(int id, String type, int duration, double baseprice, int prodID){
 
-        public void action() {
-            ACLMessage msg = receive();
-            if (msg != null) {
-
-                switch (msg.getPerformative()) {
-
-
-                    case ACLMessage.REQUEST:
-                        System.out.println(msg);
-
-                        String[] parts = msg.getContent().split(" ");
-                        // create new auction
-                        try {
-                            Object[] params = {Integer.parseInt(parts[0]), parts[1], Integer.parseInt(parts[2]),
-                                    Double.parseDouble(parts[3]), Integer.parseInt(parts[4]), this};
-                            // Agent path on jade = com.aiad2021.Agents
-                            AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
-                                    "com.aiad2021.Agents.Auction", params);
-                            ac.start();
-                            // this.agentControllers.add(ac); //todo idk what is this used for
-                        } catch (StaleProxyException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case ACLMessage.PROPOSE:
-                        //todo replace with gui join
-                        System.out.println(msg);
-                        joinAuction("Auction:1"); //replace with auction ID
-                        break;
-
-                }
-
-                // ACLMessage reply = msg.createReply();
-
-                // send(reply);
-            } else {
-                block();
-            }
+        try {
+            Object[] params = {id, type, duration, baseprice, prodID, this};
+            // Agent path on jade = com.aiad2021.Agents
+            AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
+                    "com.aiad2021.Agents.Auction", params);
+            ac.start();
+        } catch (StaleProxyException e) {
+            e.printStackTrace();
         }
     }
-
     //
     private void joinAuction(String auctionId){
         //todo parse msg
@@ -294,8 +259,22 @@ public class User extends Agent {
     // handles input from user
     public void handleMessage(String message) {
         System.out.println(message);
-        if(message == "join Auction:1"){ //todo adapt to bid on the auction i type
-           //joinAuction("Auction:1");//todo parse acution id
+        String[] parts = message.split(" ");
+        //todo avoid bad messages
+        switch(parts[0]){
+            case "create":
+                createAuction(Integer.parseInt(parts[1]),parts[2],Integer.parseInt(parts[3]),Double.parseDouble(parts[4]),Integer.parseInt(parts[5]));
+                break;
+            case "join":
+                joinAuction(parts[1]); //todo parse auction id
+                break;
+            default:
+                System.out.println("Invalid comand");
+        }
+
+        if(message.equals("join")){ //todo adapt to bid on the auction i type
+            System.out.println("accepted");
+            joinAuction("Auction:1"); //todo parse auction id
         }
     }
 
