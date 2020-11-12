@@ -78,7 +78,7 @@ public class Auction extends Agent {
         }
 
         addBehaviour(new notifyWinner(this,(this.duration+5)*1000));
-
+        addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
     }
 
     //notify winner
@@ -99,9 +99,8 @@ public class Auction extends Agent {
             this.a.doDelete();
         }
     }
-    //read messages
 
-    //FIPA
+    //FIPA - handle auction proposals
     class FIPARequestResp extends AchieveREResponder {
 
         public FIPARequestResp(Agent a, MessageTemplate mt) {
@@ -129,6 +128,7 @@ public class Auction extends Agent {
         }
 
     }
+
     //subscribe
 
 }

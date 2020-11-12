@@ -10,16 +10,22 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+
+import java.util.ArrayList;
+import java.util.Vector;
 
 public class User extends Agent {
 
     //attributes
     private int id;
     private String Username;
+
+    //private ArrayList;
 
     @Override
     protected void setup(){
@@ -55,20 +61,24 @@ public class User extends Agent {
         public void action(){
             ACLMessage msg = receive();
             if(msg != null) {
-                if(msg.getPerformative() == ACLMessage.REQUEST){
-                    System.out.println(msg);
+                switch(msg.getPerformative()){
+                    case ACLMessage.REQUEST:
+                        System.out.println(msg);
 
-                    String[] parts = msg.getContent().split(" ");
-                    //create new auction
-                    try {
-                        Object[] params = {Integer.parseInt(parts[0]),parts[1], Integer.parseInt(parts[2]), Double.parseDouble(parts[3]), Integer.parseInt(parts[4]),this};
-                        //Agent path on jade = com.aiad2021.Agents
-                        AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),"com.aiad2021.Agents.Auction",params);
-                        ac.start();
-                       // this.agentControllers.add(ac); //todo idk what is this used for
-                    } catch (StaleProxyException e) {
-                        e.printStackTrace();
-                    }
+                        String[] parts = msg.getContent().split(" ");
+                        //create new auction
+                        try {
+                            Object[] params = {Integer.parseInt(parts[0]),parts[1], Integer.parseInt(parts[2]), Double.parseDouble(parts[3]), Integer.parseInt(parts[4]),this};
+                            //Agent path on jade = com.aiad2021.Agents
+                            AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),"com.aiad2021.Agents.Auction",params);
+                            ac.start();
+                            // this.agentControllers.add(ac); //todo idk what is this used for
+                        } catch (StaleProxyException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                        case ACLMessage.INFORM:
+                            break;
 
                 }
 
@@ -79,6 +89,46 @@ public class User extends Agent {
                 block();
             }
         }
+    }
+
+    //Bid
+    class FIPARequestInit extends AchieveREInitiator {
+
+        public FIPARequestInit(Agent a, ACLMessage msg) {
+            super(a, msg);
+        }
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<ACLMessage>();
+            // ...
+
+            msg.addReceiver(new AID("qqq",false));
+            msg.setContent("can you do this for me?");
+
+            v.add(msg);
+            return v;
+        }
+
+        protected void handleAgree(ACLMessage agree) {
+            // ...
+            System.out.println(agree);
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+            // ...
+            System.out.println(refuse);
+        }
+
+        protected void handleInform(ACLMessage inform) {
+            // ...
+            System.out.println(inform);
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+            // ...
+            System.out.println(failure);
+        }
+
     }
 
     private void DFSubscribe(){
