@@ -43,7 +43,7 @@ public class User extends Agent {
 
         this.auctionsList = new Hashtable<>();
 
-        gui = new CommunicationGUI(this.username);
+        gui = new CommunicationGUI( this);
         gui.setVisible(true);
 
         gui.addText("My local name is " + getAID().getLocalName());
@@ -270,7 +270,7 @@ public class User extends Agent {
     }
 
     // handles input from user
-    static public void handleMessage(String message) {
+    public void handleMessage(String message) {
         System.out.println(message);
     }
 

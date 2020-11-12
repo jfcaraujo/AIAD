@@ -12,7 +12,7 @@ public class CommunicationGUI extends JFrame{
     private JScrollPane scroll;
     private JTextArea textArea2;
 
-    public CommunicationGUI(String name){
+    public CommunicationGUI(User user){
         textArea2 = new JTextArea(500,500);
         textArea2.setText("");
         textArea2.setLineWrap(true);
@@ -20,7 +20,7 @@ public class CommunicationGUI extends JFrame{
         add(panel);
 
         panel.setSize(515,560);
-        setTitle(name);
+        setTitle(user.getName());
         setSize(500,560);
         scroll.setViewportView(textArea2);
 
@@ -28,7 +28,7 @@ public class CommunicationGUI extends JFrame{
             @Override
             public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode()==KeyEvent.VK_ENTER){
-                    User.handleMessage(textArea1.getText());
+                    user.handleMessage(textArea1.getText());
                     textArea2.setText(textArea2.getText() + "\n Command inserted: "+ textArea1.getText());
                     textArea1.setText("");
                 }
