@@ -15,15 +15,19 @@ import jade.util.leap.Iterator;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
+import com.aiad2021.view.CommunicationGUI;
+
+import java.awt.desktop.SystemSleepEvent;
+
 public class User extends Agent {
 
     //attributes
     private int id;
     private String Username;
+    CommunicationGUI gui;
 
     @Override
     protected void setup(){
-
         Runtime rt = Runtime.instance();
         Profile p1 = new ProfileImpl();
        //used to get parameters passes on intilialization
@@ -32,11 +36,13 @@ public class User extends Agent {
         //setup params
         this.id = (int) args[0];
         this.Username = (String) args[1];
+        gui = new CommunicationGUI(this.Username);
+        gui.setVisible(true);
 
-        System.out.println("My local name is " + getAID().getLocalName());
-        System.out.println("My GUID is " + getAID().getName());
-        System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
-        System.out.println( "Id: " + this.id + " Username: "+this.Username+"\n");
+        gui.addText("My local name is " + getAID().getLocalName());
+        gui.addText("My GUID is " + getAID().getName());
+        gui.addText("My addresses are " + String.join(",", getAID().getAddressesArray()));
+        gui.addText( "Id: " + this.id + " Username: "+this.Username+"\n");
 
         addBehaviour(new UserListeningBehaviour());
 
@@ -56,6 +62,7 @@ public class User extends Agent {
             ACLMessage msg = receive();
             if(msg != null) {
                 if(msg.getPerformative() == ACLMessage.REQUEST){
+                    gui.addText(msg.toString());
                     System.out.println(msg);
 
                     String[] parts = msg.getContent().split(" ");
@@ -95,7 +102,7 @@ public class User extends Agent {
 
         addBehaviour(new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
-                System.out.println("Agent "+getLocalName()+": Notification received from DF");
+                gui.addText("Agent "+getLocalName()+": Notification received from DF");
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
                     if (results.length > 0) {
@@ -107,13 +114,13 @@ public class User extends Agent {
                             while (it.hasNext()) {
                                 ServiceDescription sd = (ServiceDescription) it.next();
                                 if (sd.getType().equals("auction-listing")) {
-                                    System.out.println("auction-listing service found:");
-                                    System.out.println("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
+                                    gui.addText("auction-listing service found:");
+                                    gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                                 }
                             }
                         }
                     }
-                    System.out.println();
+                    gui.addText("\n");
                 }
                 catch (FIPAException fe) {
                     fe.printStackTrace();
@@ -124,7 +131,7 @@ public class User extends Agent {
 
     private void DFSearch(){ //todo nao testei
         // Search for services of type "weather-forecast"
-        System.out.println("Agent "+getLocalName()+" searching for services of type \"auction-listing\"");
+        gui.addText("Agent "+getLocalName()+" searching for services of type \"auction-listing\"");
         try {
             // Build the description used as template for the search
             DFAgentDescription template = new DFAgentDescription();
@@ -138,7 +145,7 @@ public class User extends Agent {
 
             DFAgentDescription[] results = DFService.search(this, template, sc);
             if (results.length > 0) {
-                System.out.println("Agent "+getLocalName()+" found the following auction-listing services:");
+                gui.addText("Agent "+getLocalName()+" found the following auction-listing services:");
                 for (DFAgentDescription dfd : results) {
                     AID provider = dfd.getName();
                     // The same agent may provide several services; we are only interested
@@ -147,13 +154,13 @@ public class User extends Agent {
                     while (it.hasNext()) {
                         ServiceDescription sd = (ServiceDescription) it.next();
                         if (sd.getType().equals("auction-listing")) {
-                            System.out.println("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
+                            gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                         }
                     }
                 }
             }
             else {
-                System.out.println("Agent "+getLocalName()+" did not find any weather-forecast service");
+                gui.addText("Agent "+getLocalName()+" did not find any weather-forecast service");
             }
         }
         catch (FIPAException fe) {
@@ -161,4 +168,8 @@ public class User extends Agent {
         }
     }
 
+    //handles input from user
+    static public void handleMessage( String message){
+        System.out.println(message);
+    }
 }
