@@ -1,9 +1,9 @@
 package com.aiad2021.Agents;
 
 import com.aiad2021.AuctionInfo;
-import com.aiad2021.World;
-import jade.core.*;
-import jade.core.Runtime;
+import com.aiad2021.view.CommunicationGUI;
+import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -18,42 +18,38 @@ import jade.util.leap.Iterator;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Vector;
-import com.aiad2021.view.CommunicationGUI;
-
-import java.awt.desktop.SystemSleepEvent;
 
 public class User extends Agent {
 
     // attributes
     private int id;
-    private String Username;
+    private String username;
     CommunicationGUI gui;
 
-    private Hashtable<String,AuctionInfo> auctionsList;
+    private Hashtable<String, AuctionInfo> auctionsList;
 
     // private ArrayList;
 
     @Override
     protected void setup() {
-        // used to get parameters passes on intilialization
+        // used to get parameters passes on initialization
         Object[] args = this.getArguments();
 
         // setup params
         this.id = (int) args[0];
-        this.Username = (String) args[1];
+        this.username = (String) args[1];
 
         this.auctionsList = new Hashtable<>();
 
-        gui = new CommunicationGUI(this.Username);
+        gui = new CommunicationGUI(this.username);
         gui.setVisible(true);
 
         gui.addText("My local name is " + getAID().getLocalName());
         gui.addText("My GUID is " + getAID().getName());
         gui.addText("My addresses are " + String.join(",", getAID().getAddressesArray()));
-        gui.addText("Id: " + this.id + " Username: " + this.Username + "\n");
+        gui.addText("Id: " + this.id + " Username: " + this.username + "\n");
 
         DFSearch();
         DFSubscribe();
@@ -81,8 +77,8 @@ public class User extends Agent {
                         String[] parts = msg.getContent().split(" ");
                         // create new auction
                         try {
-                            Object[] params = { Integer.parseInt(parts[0]), parts[1], Integer.parseInt(parts[2]),
-                                    Double.parseDouble(parts[3]), Integer.parseInt(parts[4]), this };
+                            Object[] params = {Integer.parseInt(parts[0]), parts[1], Integer.parseInt(parts[2]),
+                                    Double.parseDouble(parts[3]), Integer.parseInt(parts[4]), this};
                             // Agent path on jade = com.aiad2021.Agents
                             AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
                                     "com.aiad2021.Agents.Auction", params);
@@ -181,11 +177,11 @@ public class User extends Agent {
                                 int i = 0;
                                 String type = "";
                                 double basePrice = 0.0;
-                                double currentPrice= 0.0;
+                                double currentPrice = 0.0;
                                 it = sd.getAllProperties();
-                                while(it.hasNext()){
+                                while (it.hasNext()) {
                                     Property p = (Property) it.next();
-                                    switch(i){
+                                    switch (i) {
                                         case 0:
                                             type = (String) p.getValue();
                                             break;
@@ -200,7 +196,7 @@ public class User extends Agent {
                                     i++;
                                 }
                                 AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
-                                auctionsList.put(sd.getName(),ai);
+                                auctionsList.put(sd.getName(), ai);
                             }
                         }
                     }
@@ -243,11 +239,11 @@ public class User extends Agent {
                         int i = 0;
                         String type = "";
                         double basePrice = 0.0;
-                        double currentPrice= 0.0;
+                        double currentPrice = 0.0;
                         it = sd.getAllProperties();
-                        while(it.hasNext()){
+                        while (it.hasNext()) {
                             Property p = (Property) it.next();
-                            switch(i){
+                            switch (i) {
                                 case 0:
                                     type = (String) p.getValue();
                                     break;
@@ -262,7 +258,7 @@ public class User extends Agent {
                             i++;
                         }
                         AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
-                        auctionsList.put(sd.getName(),ai);
+                        auctionsList.put(sd.getName(), ai);
                     }
                 }
             } else {
@@ -276,5 +272,37 @@ public class User extends Agent {
     // handles input from user
     static public void handleMessage(String message) {
         System.out.println(message);
+    }
+
+    private double getNewBid(Bid bid) {
+        AuctionInfo auctionInfo = this.auctionsList.get(bid.auction.getName());
+        switch (bid.auction.type) {
+            case "english auction":
+                if (auctionInfo.getWinningPrice() + bid.auction.minBid >= bid.maxBid)
+                    return -1;//auction is too expensive
+                // else if ((auction.endTime-auction.startTime)/auction.startTime<bid.delay && bid.maxBid-lastBid>= bid.auction.minBid*bid.aggressiveness) return 0;//wait more before bidding
+                else if (bid.aggressiveness * bid.auction.minBid + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= bid.auction.minBid + auctionInfo.getWinningPrice())
+                    return bid.maxBid;
+                else return bid.aggressiveness * bid.auction.minBid + auctionInfo.getWinningPrice();
+            default:
+                return -2;//auction type not found
+        }
+    }
+
+}
+
+class Bid {
+    int maxBid;
+    int aggressiveness;
+    //int delay;
+    Auction auction;
+    String auctionName;
+
+    public Bid(int maxBid, int aggressiveness, Auction auction, String auctionName) {
+        this.maxBid = maxBid;
+        this.aggressiveness = aggressiveness;
+        //this.delay = delay;
+        this.auction = auction;
+        this.auctionName = auctionName;
     }
 }

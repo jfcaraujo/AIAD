@@ -3,11 +3,11 @@ package com.aiad2021;
 
 public class AuctionInfo {
 
-    private String type;
+    private final String type;
     private Product product;
-    private double basePrice;
-    private double winningPrice;
-    private String ip;
+    private final double basePrice;
+    private final double winningPrice;
+    private final String ip;
 
     public AuctionInfo(String type /*, Product product*/, double basePrice, double winningPrice, String ip){
         this.type = type;

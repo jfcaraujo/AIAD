@@ -22,11 +22,12 @@ public class Auction extends Agent {
     private int id;
 
     private int duration;
-    private String type;
+    protected String type;
     private Product product;
     private double basePrice;
+    protected double minBid;
     private double winningPrice;
-    private ArrayList<Double> bids;
+    private int amountOfBids;
     private User owner;
     private User currentWinner;
 
@@ -40,7 +41,7 @@ public class Auction extends Agent {
 
     @Override
     protected void setup(){
-        //used to get parameters passes on intilialization
+        //used to get parameters passes on initialization
         Object[] args = this.getArguments();
 
         //init class
@@ -48,14 +49,14 @@ public class Auction extends Agent {
         this.type = (String) args[1];
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
-        this.winningPrice = this.basePrice;
+        this.winningPrice = this.basePrice;//todo add min bid
         this.product = new Product(); //TODO pass the id
         this.auctionGUI = new AuctionGUI(""+id);
         this.auctionGUI.setVisible(true);
        //this.owner = (User) args[5];
         
         this.currentWinner = null; //todo
-        this.bids = new ArrayList<>();
+        this.amountOfBids = 0;
         this.participants = new ArrayList<>();
 
         System.out.println("My local name is " + getAID().getLocalName());
