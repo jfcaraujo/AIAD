@@ -15,6 +15,8 @@ import jade.proto.AchieveREResponder;
 
 import java.util.ArrayList;
 
+import com.aiad2021.view.AuctionGUI;
+
 public class Auction extends Agent {
 
     private int id;
@@ -32,19 +34,24 @@ public class Auction extends Agent {
     //Yellow Pages
     private String serviceName;
 
+    //GUI
+    private AuctionGUI auctionGUI;
+
     @Override
     protected void setup(){
         //used to get parameters passes on intilialization
         Object[] args = this.getArguments();
 
         //init class
-       this.id = (int) args[0];
-       this.type = (String) args[1];
-       this.duration = (int) args[2];
-       this.basePrice = (double) args[3]; //todo change
-       this.product = new Product(); //TODO pass the id
+        this.id = (int) args[0];
+        this.type = (String) args[1];
+        this.duration = (int) args[2];
+        this.basePrice = (double) args[3]; //todo change
+        this.product = new Product(); //TODO pass the id
+        this.auctionGUI = new AuctionGUI(""+id);
+        this.auctionGUI.setVisible(true);
        //this.owner = (User) args[5];
-
+        
         this.currentWinner = null; //todo
         this.bids = new ArrayList<>();
         this.participants = new ArrayList<>();
