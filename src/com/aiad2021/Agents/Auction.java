@@ -29,7 +29,7 @@ public class Auction extends Agent {
     private double winningPrice;
     private int amountOfBids;
     private User owner;
-    private User currentWinner;
+    private String currentWinnerId;
 
     private ArrayList<User> participants;
 
@@ -55,7 +55,7 @@ public class Auction extends Agent {
         this.auctionGUI.setVisible(true);
        //this.owner = (User) args[5];
         
-        this.currentWinner = null; //todo
+        this.currentWinnerId = " "; //todo
         this.amountOfBids = 0;
         this.participants = new ArrayList<>();
 
@@ -121,19 +121,31 @@ public class Auction extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) {
+
+            double bidValue = Double.parseDouble(request.getContent());
+
             ACLMessage reply = request.createReply();
-            // ...
-            reply.setPerformative(ACLMessage.AGREE);
-            System.out.println(request.getContent());
+
+            if(bidValue > winningPrice){
+                reply.setPerformative(ACLMessage.AGREE);
+            }else{
+                reply.setPerformative(ACLMessage.REFUSE);
+            }
             return reply;
         }
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+
             ACLMessage result = request.createReply();
-            // ...
+
+            //update winning price
+            winningPrice = Double.parseDouble(request.getContent());
+            //update current winner
+            currentWinnerId = request.getSender().getName();
 
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent("here you go!");
+            result.setContent("You are winning");
+
             //posso enviar tbm objetos se quiser
             //result.setContentObject(new jade.util.Vector());
 

@@ -116,12 +116,11 @@ public class User extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
-            //do nothing
             System.out.println(agree);
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            //todo try again
+            makeBid(auctionId); //todo update bids
             System.out.println(refuse);
         }
 
@@ -131,7 +130,7 @@ public class User extends Agent {
         }
 
         protected void handleFailure(ACLMessage failure) {
-            //todo prolly try again
+            makeBid(auctionId); //todo try without updating teh bid
             System.out.println(failure);
         }
 
