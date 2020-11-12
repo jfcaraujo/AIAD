@@ -1,11 +1,13 @@
 package com.aiad2021.Agents;
 
+import com.aiad2021.AuctionInfo;
 import com.aiad2021.World;
 import jade.core.*;
 import jade.core.Runtime;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
@@ -17,6 +19,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Vector;
 import com.aiad2021.view.CommunicationGUI;
 
@@ -29,18 +32,21 @@ public class User extends Agent {
     private String Username;
     CommunicationGUI gui;
 
+    private Hashtable<String,AuctionInfo> auctionsList;
+
     // private ArrayList;
 
     @Override
     protected void setup() {
-        Runtime rt = Runtime.instance();
-        Profile p1 = new ProfileImpl();
         // used to get parameters passes on intilialization
         Object[] args = this.getArguments();
 
         // setup params
         this.id = (int) args[0];
         this.Username = (String) args[1];
+
+        this.auctionsList = new Hashtable<>();
+
         gui = new CommunicationGUI(this.Username);
         gui.setVisible(true);
 
@@ -51,6 +57,8 @@ public class User extends Agent {
 
         DFSearch();
         DFSubscribe();
+
+        System.out.println(auctionsList.get("Auction:1").getType());
 
         addBehaviour(new UserListeningBehaviour());
 
@@ -167,10 +175,32 @@ public class User extends Agent {
                             while (it.hasNext()) {
                                 ServiceDescription sd = (ServiceDescription) it.next();
                                 if (sd.getType().equals("auction-listing")) {
-                                    gui.addText("auction-listing service found:");
-                                    gui.addText("- Service \"" + sd.getName() + "\" provided by agent "
-                                            + provider.getName());
+                                    gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                                 }
+                                //properties
+                                int i = 0;
+                                String type = "";
+                                double basePrice = 0.0;
+                                double currentPrice= 0.0;
+                                it = sd.getAllProperties();
+                                while(it.hasNext()){
+                                    Property p = (Property) it.next();
+                                    switch(i){
+                                        case 0:
+                                            type = (String) p.getValue();
+                                            break;
+                                        case 1:
+                                            basePrice = Double.parseDouble((String) p.getValue());
+                                            break;
+                                        case 2:
+                                            currentPrice = Double.parseDouble((String) p.getValue());
+                                            break;
+
+                                    }
+                                    i++;
+                                }
+                                AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
+                                auctionsList.put(sd.getName(),ai);
                             }
                         }
                     }
@@ -209,6 +239,30 @@ public class User extends Agent {
                         if (sd.getType().equals("auction-listing")) {
                             gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                         }
+                        //properties
+                        int i = 0;
+                        String type = "";
+                        double basePrice = 0.0;
+                        double currentPrice= 0.0;
+                        it = sd.getAllProperties();
+                        while(it.hasNext()){
+                            Property p = (Property) it.next();
+                            switch(i){
+                                case 0:
+                                    type = (String) p.getValue();
+                                    break;
+                                case 1:
+                                    basePrice = Double.parseDouble((String) p.getValue());
+                                    break;
+                                case 2:
+                                    currentPrice = Double.parseDouble((String) p.getValue());
+                                    break;
+
+                            }
+                            i++;
+                        }
+                        AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
+                        auctionsList.put(sd.getName(),ai);
                     }
                 }
             } else {

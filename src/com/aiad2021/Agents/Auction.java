@@ -25,6 +25,7 @@ public class Auction extends Agent {
     private String type;
     private Product product;
     private double basePrice;
+    private double winningPrice;
     private ArrayList<Double> bids;
     private User owner;
     private User currentWinner;
@@ -47,6 +48,7 @@ public class Auction extends Agent {
         this.type = (String) args[1];
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
+        this.winningPrice = this.basePrice;
         this.product = new Product(); //TODO pass the id
         this.auctionGUI = new AuctionGUI(""+id);
         this.auctionGUI.setVisible(true);
@@ -75,7 +77,10 @@ public class Auction extends Agent {
             sd.addOntologies("auction-listing-ontology");
             // Agents that want to use this service need to "speak" the FIPA-SL language
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
-            sd.addProperties(new Property("type", type));
+            sd.addProperties(new Property("type", this.type));
+            /*sd.addProperties(new Property("product",this.product));*/ //todo check about products
+            sd.addProperties(new Property("basePrice",this.basePrice));
+            sd.addProperties(new Property("winningPrice",this.winningPrice));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
