@@ -99,6 +99,7 @@ public class User extends Agent {
         if(bidValue == 0){ //create new bid value
             Bid b = new Bid(money, 1,auctionId);
             bidValue = getNewBid(b);
+            System.out.println(b);
         }//else do nth repeat
         switch((int) bidValue){
             case -1:
@@ -154,6 +155,7 @@ public class User extends Agent {
         protected void handleRefuse(ACLMessage refuse) {
             gui.addText("REFUSE: "+auctionId+ " - I will try again with a higher value!");
             //make new bid with a higher value
+            auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
             makeBid(auctionId,0);
 
         }
@@ -198,10 +200,11 @@ public class User extends Agent {
             System.out.println(agree);
         }
 
-        protected void handleRefuse(ACLMessage refuse) {
-            makeBid(auctionId,0); //todo update bids
+        /*protected void handleRefuse(ACLMessage refuse) {
+            auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
+            makeBid(auctionId,0);
             System.out.println(refuse);
-        }
+        }*/
 
         protected void handleInform(ACLMessage inform) {
             //todo idk
@@ -375,6 +378,7 @@ public class User extends Agent {
 
     private double getNewBid(Bid bid) {
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
+        System.out.println(auctionInfo.getMinBid()+" | "+auctionInfo.getWinningPrice());
         switch (this.auctionsList.get(bid.auctionId).getType()) {
             case "english":
                 if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)

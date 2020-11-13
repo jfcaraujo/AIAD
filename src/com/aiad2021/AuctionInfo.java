@@ -6,9 +6,9 @@ public class AuctionInfo {
     private final String type;
     private Product product;
     private final double basePrice;
-    private final double winningPrice;
+    private double winningPrice;
     private final String ip;
-    private double minBid;
+    private final double minBid;
 
     public AuctionInfo(String type /*, Product product*/, double basePrice, double minBid, double winningPrice, String ip){
         this.type = type;
@@ -38,7 +38,7 @@ public class AuctionInfo {
         return minBid;
     }
 
-    public void setMinBid(double minBid) {
-        this.minBid = minBid;
+    public void setWinningPrice(double winningPrice) {
+        this.winningPrice = winningPrice;
     }
 }

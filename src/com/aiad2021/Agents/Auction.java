@@ -51,7 +51,7 @@ public class Auction extends Agent {
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
         this.minBid = (double) args[4];
-        this.winningPrice = this.basePrice;//todo add min bid
+        this.winningPrice = this.basePrice-this.minBid;
         this.product = new Product(); //TODO pass the id
         this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
@@ -94,6 +94,7 @@ public class Auction extends Agent {
 
         addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+        addBehaviour(new FIPASubscribeResp(this, MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE)));
     }
 
     //notify winner
@@ -134,11 +135,12 @@ public class Auction extends Agent {
 
             ACLMessage reply = request.createReply();
 
-            if (bidValue > winningPrice) {
+            if (bidValue > winningPrice+minBid) {
                 reply.setPerformative(ACLMessage.AGREE);
                 winningPrice = bidValue;
                 currentWinnerId = request.getSender().getName();
             } else {
+                reply.setContent(""+winningPrice);
                 reply.setPerformative(ACLMessage.REFUSE);
             }
             return reply;
