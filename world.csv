@@ -1,5 +1,5 @@
-AUCTION,1,english,60,15.0,1
-AUCTION,2,english,10,15.0,1
+AUCTION,1,english,60,15.0,2.0
+AUCTION,2,english,10,15.0,2.0
 USER,0,John Doe,1000.00
 USER,1,John Doe,1000.00
 USER,2,John Doe,1000.00

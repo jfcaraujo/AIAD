@@ -26,10 +26,10 @@ public class Auction extends Agent {
     protected String type;
     private Product product;
     private double basePrice;
-    protected double minBid;
+    private double minBid;
+    //private product //todo
     private double winningPrice;
     private int amountOfBids;
-    private User owner;
     private String currentWinnerId;
 
     private ArrayList<User> participants;
@@ -50,6 +50,7 @@ public class Auction extends Agent {
         this.type = (String) args[1];
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
+        this.minBid = (double) args[4];
         this.winningPrice = this.basePrice;//todo add min bid
         this.product = new Product(); //TODO pass the id
         this.auctionGUI = new AuctionGUI(""+id);
@@ -82,6 +83,7 @@ public class Auction extends Agent {
             sd.addProperties(new Property("type", this.type));
             /*sd.addProperties(new Property("product",this.product));*/ //todo check about products
             sd.addProperties(new Property("basePrice",this.basePrice));
+            sd.addProperties(new Property("minBid",this.basePrice));
             sd.addProperties(new Property("winningPrice",this.winningPrice));
             dfd.addServices(sd);
 
