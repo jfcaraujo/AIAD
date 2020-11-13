@@ -4,7 +4,6 @@ import com.aiad2021.AuctionInfo;
 import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -76,7 +75,7 @@ public class User extends Agent {
     //
     private void joinAuction(String auctionId){
         makeBid(auctionId);
-        subscribeAuction();
+        subscribeAuction(auctionId);
     }
 
     private void makeBid(String auctionId){
@@ -84,8 +83,11 @@ public class User extends Agent {
         addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),auctionId,this.auctionsList.get("Auction:1")));
     }
 
-    private void subscribeAuction(){
-        //todo
+    private void subscribeAuction(String auctionId){
+        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+        message.addReceiver(new AID(auctionId, false));
+        message.setContent("subscribe");
+        this.send(message);
     }
 
 
@@ -280,8 +282,8 @@ public class User extends Agent {
             case "join":
                 joinAuction(parts[1]); //todo parse auction id
                 break;
-            case "status":
-                getStatus(parts[1]);
+            case "subscribe":
+                subscribeAuction(parts[1]);
                 break;
             default:
                 System.out.println("Invalid command");
