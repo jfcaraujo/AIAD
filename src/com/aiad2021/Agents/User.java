@@ -149,7 +149,8 @@ public class User extends Agent {
 
         protected void handleRefuse(ACLMessage refuse) {
             gui.addText("REFUSE: "+auctionId+ " - I will try again with a higher value!");
-            //make new bid with a higher value
+            //update winning price
+            auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
             makeBid(auctionId,0);
 
         }

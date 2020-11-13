@@ -138,7 +138,9 @@ public class Auction extends Agent {
             if(bidValue > winningPrice){
                 reply.setPerformative(ACLMessage.AGREE);
             }else{
+
                 reply.setPerformative(ACLMessage.REFUSE);
+                reply.setContent(String.valueOf(winningPrice));
             }
             return reply;
         }

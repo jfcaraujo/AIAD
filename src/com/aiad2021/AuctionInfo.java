@@ -6,7 +6,7 @@ public class AuctionInfo {
     private final String type;
     private Product product;
     private final double basePrice;
-    private final double winningPrice;
+    private double winningPrice;
     private final String ip;
     private double minBid;
 
@@ -24,6 +24,10 @@ public class AuctionInfo {
 
     public double getBasePrice() {
         return basePrice;
+    }
+
+    public void setWinningPrice(double winningPrice){
+        this.winningPrice = winningPrice;
     }
 
     public double getWinningPrice() {
