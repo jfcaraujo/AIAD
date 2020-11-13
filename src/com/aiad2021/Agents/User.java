@@ -12,6 +12,7 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
@@ -53,12 +54,24 @@ public class User extends Agent {
 
         DFSearch();
         DFSubscribe();
+        addBehaviour(new ListeningBehaviour());
 
-        //todo delete - debug
-        System.out.println(auctionsList.get("Auction:1").getType());
+    }
 
-        //todo create a behaviour to read the winner message
+    class ListeningBehaviour extends CyclicBehaviour {
 
+        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
+
+        public void action() {
+
+            ACLMessage msg = receive(mt);
+
+            if(msg != null) {
+               gui.addText(msg.getContent());
+            } else {
+                block();
+            }
+        }
     }
 
     private void createAuction(int id, String type, int duration, double baseprice, int prodID){
@@ -130,7 +143,7 @@ public class User extends Agent {
         }
 
         protected void handleFailure(ACLMessage failure) {
-            makeBid(auctionId); //todo try without updating teh bid
+            //makeBid(auctionId); //todo try without updating teh bid
             System.out.println(failure);
         }
 
@@ -185,7 +198,6 @@ public class User extends Agent {
                                         case 2:
                                             currentPrice = Double.parseDouble((String) p.getValue());
                                             break;
-
                                     }
                                     i++;
                                 }
