@@ -8,10 +8,12 @@ public class AuctionInfo {
     private final double basePrice;
     private final double winningPrice;
     private final String ip;
+    private double minBid;
 
-    public AuctionInfo(String type /*, Product product*/, double basePrice, double winningPrice, String ip){
+    public AuctionInfo(String type /*, Product product*/, double basePrice, double minBid, double winningPrice, String ip){
         this.type = type;
         this.basePrice = basePrice;
+        this.minBid = minBid;
         this.winningPrice = winningPrice;
         this.ip = ip;
     }
@@ -30,5 +32,13 @@ public class AuctionInfo {
 
     public String getIp() {
         return ip;
+    }
+
+    public double getMinBid() {
+        return minBid;
+    }
+
+    public void setMinBid(double minBid) {
+        this.minBid = minBid;
     }
 }

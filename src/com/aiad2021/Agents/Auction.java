@@ -1,6 +1,7 @@
 package com.aiad2021.Agents;
 
 import com.aiad2021.Product;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
@@ -25,10 +26,10 @@ public class Auction extends Agent {
     protected String type;
     private Product product;
     private double basePrice;
-    protected double minBid;
+    private double minBid;
+    //private product //todo
     private double winningPrice;
     private int amountOfBids;
-    private User owner;
     private String currentWinnerId;
 
     private ArrayList<User> participants;
@@ -49,6 +50,7 @@ public class Auction extends Agent {
         this.type = (String) args[1];
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
+        this.minBid = (double) args[4];
         this.winningPrice = this.basePrice;//todo add min bid
         this.product = new Product(); //TODO pass the id
         this.auctionGUI = new AuctionGUI("" + id);
@@ -80,8 +82,9 @@ public class Auction extends Agent {
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
             sd.addProperties(new Property("type", this.type));
             /*sd.addProperties(new Property("product",this.product));*/ //todo check about products
-            sd.addProperties(new Property("basePrice", this.basePrice));
-            sd.addProperties(new Property("winningPrice", this.winningPrice));
+            sd.addProperties(new Property("basePrice",this.basePrice));
+            sd.addProperties(new Property("minBid",this.basePrice));
+            sd.addProperties(new Property("winningPrice",this.winningPrice));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
@@ -105,9 +108,15 @@ public class Auction extends Agent {
 
         @Override
         protected void onWake() {
+
             super.onWake();
-            System.out.println("Auction:" + this.a.getAID() + " ended");
-            //todo message the winner
+            System.out.println("Auction:" + this.a.getAID()+ " ended");
+
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
+            msg.addReceiver(new AID(currentWinnerId, false));
+            msg.setContent("You won "+this.getAgent().getName().split("@")[0]+"!");
+            send(msg);
+
             this.a.doDelete();
         }
     }
@@ -142,7 +151,7 @@ public class Auction extends Agent {
            /* //update winning price
             winningPrice = Double.parseDouble(request.getContent());
             //update current winner
-            currentWinnerId = request.getSender().getName();
+            currentWinnerId = request.getSender().getName().split("@")[0];
 
             result.setPerformative(ACLMessage.INFORM);
             result.setContent("You are winning");*/

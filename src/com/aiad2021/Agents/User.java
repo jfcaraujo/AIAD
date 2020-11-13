@@ -4,6 +4,7 @@ import com.aiad2021.AuctionInfo;
 import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -11,6 +12,7 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
@@ -25,6 +27,7 @@ public class User extends Agent {
     // attributes
     private int id;
     private String username;
+    private double money;
     CommunicationGUI gui;
 
     private Hashtable<String, AuctionInfo> auctionsList;
@@ -39,6 +42,7 @@ public class User extends Agent {
         // setup params
         this.id = (int) args[0];
         this.username = (String) args[1];
+        this.money = (double) args[2];
 
         this.auctionsList = new Hashtable<>();
 
@@ -52,12 +56,24 @@ public class User extends Agent {
 
         DFSearch();
         DFSubscribe();
+        addBehaviour(new ListeningBehaviour());
 
-        //todo delete - debug
-        System.out.println(auctionsList.get("Auction:1").getType());
+    }
 
-        //todo create a behaviour to read the winner message
+    class ListeningBehaviour extends CyclicBehaviour {
 
+        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
+
+        public void action() {
+
+            ACLMessage msg = receive(mt);
+
+            if(msg != null) {
+               gui.addText(msg.getContent());
+            } else {
+                block();
+            }
+        }
     }
 
     private void createAuction(int id, String type, int duration, double baseprice, int prodID){
@@ -72,15 +88,29 @@ public class User extends Agent {
             e.printStackTrace();
         }
     }
-    //
+
     private void joinAuction(String auctionId){
-        makeBid(auctionId);
+        makeBid(auctionId,0);
         subscribeAuction(auctionId);
     }
 
-    private void makeBid(String auctionId){
-        //todo create bid value for the maesage content
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),auctionId,this.auctionsList.get("Auction:1")));
+    private void makeBid(String auctionId, double bidValue){
+
+        if(bidValue == 0){ //create new bid value
+            Bid b = new Bid(money, 1,auctionId);
+            bidValue = getNewBid(b);
+        }//else do nth repeat
+        switch((int) bidValue){
+            case -1:
+                gui.addText("MakeBid - Auction is too expensive!");
+                return;
+            case-2:
+                gui.addText("MakeBid - Auction not found!");
+                return;
+            default:
+                break;
+        }
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),auctionId,this.auctionsList.get(auctionId), bidValue));
     }
 
     private void subscribeAuction(String auctionId){
@@ -98,18 +128,17 @@ public class User extends Agent {
         private AuctionInfo auctionInfo;
         private String msgContent;
 
-        public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo) {
+        public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo, Double bidValue) {
             super(a, msg);
             this.auctionId = auctionId;
             this.auctionInfo = auctionInfo;
 
-            this.msgContent = String.valueOf(this.auctionInfo.getWinningPrice() + 1.0);
+            this.msgContent = String.valueOf(bidValue);
 
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<ACLMessage>();
-            // ...
 
             msg.addReceiver(new AID(this.auctionId, false));
             msg.setContent(this.msgContent);
@@ -119,22 +148,25 @@ public class User extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
-            System.out.println(agree);
+            gui.addText("AGREE: "+auctionId);
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            makeBid(auctionId); //todo update bids
-            System.out.println(refuse);
+            gui.addText("REFUSE: "+auctionId+ " - I will try again with a higher value!");
+            //make new bid with a higher value
+            makeBid(auctionId,0);
+
         }
 
         protected void handleInform(ACLMessage inform) {
-            //todo idk
-            System.out.println(inform);
+            //means that i am winning do nothing
+            gui.addText("INFORM: "+auctionId+ " - I am winning !");
         }
 
-        protected void handleFailure(ACLMessage failure) {
-            makeBid(auctionId); //todo try without updating teh bid
-            System.out.println(failure);
+        protected void handleFailure(ACLMessage failure) {//todo
+            //repeat 3 times and stop with same value
+            //makeBid(auctionId,bidValue);
+            gui.addText("FAILURE: "+auctionId);
         }
 
     }
@@ -167,7 +199,7 @@ public class User extends Agent {
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            makeBid(auctionId); //todo update bids
+            makeBid(auctionId,0); //todo update bids
             System.out.println(refuse);
         }
 
@@ -177,7 +209,7 @@ public class User extends Agent {
         }
 
         protected void handleFailure(ACLMessage failure) {
-            makeBid(auctionId); //todo try without updating teh bid
+            //makeBid(auctionId); //todo try without updating teh bid
             System.out.println(failure);
         }
 
@@ -218,6 +250,7 @@ public class User extends Agent {
                                 int i = 0;
                                 String type = "";
                                 double basePrice = 0.0;
+                                double minBid = 0.0;
                                 double currentPrice = 0.0;
                                 it = sd.getAllProperties();
                                 while (it.hasNext()) {
@@ -230,13 +263,15 @@ public class User extends Agent {
                                             basePrice = Double.parseDouble((String) p.getValue());
                                             break;
                                         case 2:
+                                            minBid = Double.parseDouble((String) p.getValue());
+                                            break;
+                                        case 3:
                                             currentPrice = Double.parseDouble((String) p.getValue());
                                             break;
-
                                     }
                                     i++;
                                 }
-                                AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
+                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid,currentPrice, provider.getName());
                                 auctionsList.put(sd.getName(), ai);
                             }
                         }
@@ -249,7 +284,7 @@ public class User extends Agent {
         });
     }
 
-    private void DFSearch() { // todo nao testei
+    private void DFSearch() {
         // Search for services of type "weather-forecast"
         gui.addText("Agent " + getLocalName() + " searching for services of type \"auction-listing\"");
         try {
@@ -280,6 +315,7 @@ public class User extends Agent {
                         int i = 0;
                         String type = "";
                         double basePrice = 0.0;
+                        double minBid = 0.0;
                         double currentPrice = 0.0;
                         it = sd.getAllProperties();
                         while (it.hasNext()) {
@@ -292,13 +328,16 @@ public class User extends Agent {
                                     basePrice = Double.parseDouble((String) p.getValue());
                                     break;
                                 case 2:
+                                    minBid = Double.parseDouble((String) p.getValue());
+                                    break;
+                                case 3:
                                     currentPrice = Double.parseDouble((String) p.getValue());
                                     break;
 
                             }
                             i++;
                         }
-                        AuctionInfo ai = new AuctionInfo(type, basePrice, currentPrice, provider.getName());
+                        AuctionInfo ai = new AuctionInfo(type, basePrice,minBid, currentPrice, provider.getName());
                         auctionsList.put(sd.getName(), ai);
                     }
                 }
@@ -320,6 +359,8 @@ public class User extends Agent {
                 createAuction(Integer.parseInt(parts[1]),parts[2],Integer.parseInt(parts[3]),Double.parseDouble(parts[4]),Integer.parseInt(parts[5]));
                 break;
             case "join":
+                parts[1] = parts[1].substring(0, parts[1].length()-1); //remove empty char
+
                 joinAuction(parts[1]); //todo parse auction id
                 break;
             default:
@@ -333,15 +374,15 @@ public class User extends Agent {
     }
 
     private double getNewBid(Bid bid) {
-        AuctionInfo auctionInfo = this.auctionsList.get(bid.auction.getName());
-        switch (bid.auction.type) {
-            case "english auction":
-                if (auctionInfo.getWinningPrice() + bid.auction.minBid >= bid.maxBid)
+        AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
+        switch (this.auctionsList.get(bid.auctionId).getType()) {
+            case "english":
+                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)
                     return -1;//auction is too expensive
                 // else if ((auction.endTime-auction.startTime)/auction.startTime<bid.delay && bid.maxBid-lastBid>= bid.auction.minBid*bid.aggressiveness) return 0;//wait more before bidding
-                else if (bid.aggressiveness * bid.auction.minBid + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= bid.auction.minBid + auctionInfo.getWinningPrice())
+                else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
                     return bid.maxBid;
-                else return bid.aggressiveness * bid.auction.minBid + auctionInfo.getWinningPrice();
+                else return bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice();
             default:
                 return -2;//auction type not found
         }
@@ -350,17 +391,15 @@ public class User extends Agent {
 }
 
 class Bid {
-    int maxBid;
+    double maxBid;
     int aggressiveness;
     //int delay;
-    Auction auction;
-    String auctionName;
+    String auctionId;
 
-    public Bid(int maxBid, int aggressiveness, Auction auction, String auctionName) {
+    public Bid(double maxBid, int aggressiveness, String auctionId) {
         this.maxBid = maxBid;
         this.aggressiveness = aggressiveness;
         //this.delay = delay;
-        this.auction = auction;
-        this.auctionName = auctionName;
+        this.auctionId = auctionId;
     }
 }

@@ -51,10 +51,10 @@ public class World {
     }
 
     //create agents
-    private void createUserAgent(int id, String Username) throws StaleProxyException {
+    private void createUserAgent(int id, String Username, double money) throws StaleProxyException {
 
         //params to be passed on the agent creation
-        Object[] params = {id,Username};
+        Object[] params = {id,Username,money};
         //Agent path on jade = com.aiad2021.Agents.User
         AgentController  ac = this.mainContainer.createNewAgent(id + Username,"com.aiad2021.Agents.User",params);
         ac.start();
@@ -63,9 +63,9 @@ public class World {
     }
 
     //create agents
-    private void createAuctionAgent(int id, String type, int duration, double basePrice, int prodId) throws StaleProxyException { //todo add args
+    private void createAuctionAgent(int id, String type, int duration, double basePrice, double minBid) throws StaleProxyException { //todo add args
         //params to be passed on the agent creation
-        Object[] params = {id,type,duration,basePrice,prodId};
+        Object[] params = {id,type,duration,basePrice,minBid};
         //Agent path on jade = com.aiad2021.Agents.
         AgentController ac = this.mainContainer.createNewAgent("Auction:"+id,"com.aiad2021.Agents.Auction",params);
         ac.start();
@@ -88,10 +88,10 @@ public class World {
 
             switch(parts[0]){
                 case "USER":
-                    createUserAgent(Integer.parseInt(parts[1]),parts[2]);
+                    createUserAgent(Integer.parseInt(parts[1]),parts[2], Double.parseDouble(parts[3]));
                     break;
                 case "AUCTION":
-                    createAuctionAgent(Integer.parseInt(parts[1]), parts[2],Integer.parseInt(parts[3]),Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
+                    createAuctionAgent(Integer.parseInt(parts[1]), parts[2],Integer.parseInt(parts[3]),Double.parseDouble(parts[4]), Double.parseDouble(parts[5]));
                     break;
 
                 default: System.exit(1);
