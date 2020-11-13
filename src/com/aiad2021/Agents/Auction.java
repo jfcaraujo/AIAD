@@ -1,6 +1,5 @@
 package com.aiad2021.Agents;
 
-import com.aiad2021.Product;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.WakerBehaviour;
@@ -24,15 +23,13 @@ public class Auction extends Agent {
 
     private int duration;
     protected String type;
-    private Product product;
     private double basePrice;
     private double minBid;
-    //private product //todo
     private double winningPrice;
     private int amountOfBids;
     private String currentWinnerId;
 
-    private ArrayList<User> participants;
+    private ArrayList<AID> participants;
 
     //Yellow Pages
     private String serviceName;
@@ -51,13 +48,12 @@ public class Auction extends Agent {
         this.duration = (int) args[2];
         this.basePrice = (double) args[3]; //todo change
         this.minBid = (double) args[4];
-        this.winningPrice = this.basePrice-this.minBid;
-        this.product = new Product(); //TODO pass the id
+        this.winningPrice = this.basePrice - this.minBid;
         this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
         //this.owner = (User) args[5];
 
-        this.currentWinnerId = " "; //todo
+        this.currentWinnerId = " ";
         this.amountOfBids = 0;
         this.participants = new ArrayList<>();
 
@@ -81,10 +77,9 @@ public class Auction extends Agent {
             // Agents that want to use this service need to "speak" the FIPA-SL language
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
             sd.addProperties(new Property("type", this.type));
-            /*sd.addProperties(new Property("product",this.product));*/ //todo check about products
-            sd.addProperties(new Property("basePrice",this.basePrice));
-            sd.addProperties(new Property("minBid",this.basePrice));
-            sd.addProperties(new Property("winningPrice",this.winningPrice));
+            sd.addProperties(new Property("basePrice", this.basePrice));
+            sd.addProperties(new Property("minBid", this.minBid));
+            sd.addProperties(new Property("winningPrice", this.winningPrice));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
@@ -111,11 +106,11 @@ public class Auction extends Agent {
         protected void onWake() {
 
             super.onWake();
-            System.out.println("Auction:" + this.a.getAID()+ " ended");
+            System.out.println("Auction:" + this.a.getAID() + " ended");
 
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
-            msg.setContent("You won "+this.getAgent().getName().split("@")[0]+"!");
+            msg.setContent("You won " + this.getAgent().getName().split("@")[0] + "!");
             send(msg);
 
             this.a.doDelete();
@@ -130,17 +125,19 @@ public class Auction extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) {
-
+            addParticipant(request.getSender());
             double bidValue = Double.parseDouble(request.getContent());
 
             ACLMessage reply = request.createReply();
 
-            if (bidValue > winningPrice+minBid) {
+            if (bidValue >= winningPrice + minBid) {
                 reply.setPerformative(ACLMessage.AGREE);
+                amountOfBids++;
                 winningPrice = bidValue;
-                currentWinnerId = request.getSender().getName();
+                currentWinnerId = request.getSender().getName().split("@")[0];
+                informAll(request.getSender().getName());
             } else {
-                reply.setContent(""+winningPrice);
+                reply.setContent("" + winningPrice);
                 reply.setPerformative(ACLMessage.REFUSE);
             }
             return reply;
@@ -150,17 +147,8 @@ public class Auction extends Agent {
 
             ACLMessage result = request.createReply();
 
-           /* //update winning price
-            winningPrice = Double.parseDouble(request.getContent());
-            //update current winner
-            currentWinnerId = request.getSender().getName().split("@")[0];
-
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent("You are winning");*/
-
-            //posso enviar tbm objetos se quiser
-            result.setPerformative(ACLMessage.INFORM);
-            result.setContent(winningPrice+" "+currentWinnerId);
+            result.setContent(winningPrice + " " + currentWinnerId);
 
             return result;
         }
@@ -175,11 +163,12 @@ public class Auction extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) {
 
-            if(!request.getContent().equals("subscribe"))
-                System.out.println("Received "+request.getContent() +" instead of subscribe");
+            if (!request.getContent().equals("subscribe"))
+                System.out.println("Received " + request.getContent() + " instead of subscribe");
 
             ACLMessage reply = request.createReply();
             reply.setPerformative(ACLMessage.AGREE);
+            addParticipant(request.getSender());
             return reply;
         }
 
@@ -187,21 +176,34 @@ public class Auction extends Agent {
 
             ACLMessage result = request.createReply();
 
-           /* //update winning price
-            winningPrice = Double.parseDouble(request.getContent());
-            //update current winner
-            currentWinnerId = request.getSender().getName();
-
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent("You are winning");*/
-
-            //posso enviar tbm objetos se quiser
-            result.setPerformative(ACLMessage.INFORM);
-            result.setContent(winningPrice+" "+currentWinnerId);
+            result.setContent(winningPrice + " " + currentWinnerId);
 
             return result;
         }
 
     }
 
+    public void informAll(String aidName) {
+        for (AID participant : this.participants) {
+            if (!participant.getName().equals(aidName)) {
+                ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+                message.addReceiver(participant);
+                message.setContent(winningPrice + " " + currentWinnerId);
+                this.send(message);
+            }
+        }
+    }
+
+    public void addParticipant(AID aid) {
+        boolean found = false;
+        for (AID participant : this.participants) {
+            if (participant.getName().equals(aid.getName())) {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            this.participants.add(aid);
+    }
 }

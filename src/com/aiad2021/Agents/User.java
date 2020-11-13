@@ -46,7 +46,7 @@ public class User extends Agent {
 
         this.auctionsList = new Hashtable<>();
 
-        gui = new CommunicationGUI( this);
+        gui = new CommunicationGUI(this);
         gui.setVisible(true);
 
         gui.addText("My local name is " + getAID().getLocalName());
@@ -68,15 +68,15 @@ public class User extends Agent {
 
             ACLMessage msg = receive(mt);
 
-            if(msg != null) {
-               gui.addText(msg.getContent());
+            if (msg != null) {
+                gui.addText(msg.getContent());
             } else {
                 block();
             }
         }
     }
 
-    private void createAuction(int id, String type, int duration, double baseprice, int prodID){
+    private void createAuction(int id, String type, int duration, double baseprice, int prodID) {
 
         try {
             Object[] params = {id, type, duration, baseprice, prodID, this};
@@ -89,39 +89,33 @@ public class User extends Agent {
         }
     }
 
-    private void joinAuction(String auctionId){
-        makeBid(auctionId,0);
-        subscribeAuction(auctionId);
+    private void joinAuction(String auctionId) {
+        makeBid(auctionId, 0);
     }
 
-    private void makeBid(String auctionId, double bidValue){
+    private void makeBid(String auctionId, double bidValue) {
 
-        if(bidValue == 0){ //create new bid value
-            Bid b = new Bid(money, 1,auctionId);
+        if (bidValue == 0) { //create new bid value
+            Bid b = new Bid(money, 1, auctionId);
             bidValue = getNewBid(b);
-            System.out.println(b);
         }//else do nth repeat
-        switch((int) bidValue){
+        switch ((int) bidValue) {
             case -1:
                 gui.addText("MakeBid - Auction is too expensive!");
                 return;
-            case-2:
-                gui.addText("MakeBid - Auction not found!");
+            case -2:
+                gui.addText("MakeBid - Auction type not found!");
                 return;
             default:
                 break;
         }
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST),auctionId,this.auctionsList.get(auctionId), bidValue));
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, this.auctionsList.get(auctionId), bidValue));
     }
 
-    private void subscribeAuction(String auctionId){
-       /* ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-        message.addReceiver(new AID(auctionId, false));
-        message.setContent("subscribe");
-        this.send(message);*/
-        addBehaviour(new FIPASubscribe(this, new ACLMessage(ACLMessage.SUBSCRIBE),auctionId));
+    private void subscribeAuction(String auctionId) {
+        addBehaviour(new FIPASubscribe(this, new ACLMessage(ACLMessage.SUBSCRIBE), auctionId));
     }
-    
+
     // Bid
     class FIPARequestBid extends AchieveREInitiator {
 
@@ -149,26 +143,26 @@ public class User extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
-            gui.addText("AGREE: "+auctionId);
+            gui.addText("AGREE: " + auctionId);
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            gui.addText("REFUSE: "+auctionId+ " - I will try again with a higher value!");
+            gui.addText("REFUSE: " + auctionId + " - I will try again with a higher value!");
             //make new bid with a higher value
             auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
-            makeBid(auctionId,0);
+            makeBid(auctionId, 0);
 
         }
 
         protected void handleInform(ACLMessage inform) {
             //means that i am winning do nothing
-            gui.addText("INFORM: "+auctionId+ " - I am winning !");
+            gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
 
         protected void handleFailure(ACLMessage failure) {//todo
             //repeat 3 times and stop with same value
             //makeBid(auctionId,bidValue);
-            gui.addText("FAILURE: "+auctionId);
+            gui.addText("FAILURE: " + auctionId);
         }
 
     }
@@ -274,7 +268,7 @@ public class User extends Agent {
                                     }
                                     i++;
                                 }
-                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid,currentPrice, provider.getName());
+                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
                                 auctionsList.put(sd.getName(), ai);
                             }
                         }
@@ -340,7 +334,7 @@ public class User extends Agent {
                             }
                             i++;
                         }
-                        AuctionInfo ai = new AuctionInfo(type, basePrice,minBid, currentPrice, provider.getName());
+                        AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
                         auctionsList.put(sd.getName(), ai);
                     }
                 }
@@ -357,33 +351,30 @@ public class User extends Agent {
         System.out.println(message);
         String[] parts = message.split(" ");
         //todo avoid bad messages
-        switch(parts[0]){
+        switch (parts[0]) {
             case "create":
-                createAuction(Integer.parseInt(parts[1]),parts[2],Integer.parseInt(parts[3]),Double.parseDouble(parts[4]),Integer.parseInt(parts[5]));
+                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
                 break;
             case "join":
-                parts[1] = parts[1].substring(0, parts[1].length()-1); //remove empty char
-
-                joinAuction(parts[1]); //todo parse auction id
+                subscribeAuction(parts[1]);
                 break;
+            case "bid":
+                System.out.println(parts[1]);
+                System.out.println(parts[2]);
+                makeBid(parts[1], Double.parseDouble(parts[2]));
             default:
                 System.out.println("Invalid command");
-        }
-//Todo isn't this unreachable?
-        if(message.equals("join")){ //todo adapt to bid on the auction i type
-            System.out.println("accepted");
-            joinAuction("Auction:1"); //todo parse auction id
         }
     }
 
     private double getNewBid(Bid bid) {
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
-        System.out.println(auctionInfo.getMinBid()+" | "+auctionInfo.getWinningPrice());
+        System.out.println(auctionInfo.getMinBid() + " | " + auctionInfo.getWinningPrice());
         switch (this.auctionsList.get(bid.auctionId).getType()) {
             case "english":
                 if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)
                     return -1;//auction is too expensive
-                // else if ((auction.endTime-auction.startTime)/auction.startTime<bid.delay && bid.maxBid-lastBid>= bid.auction.minBid*bid.aggressiveness) return 0;//wait more before bidding
+                    // else if ((auction.endTime-auction.startTime)/auction.startTime<bid.delay && bid.maxBid-lastBid>= bid.auction.minBid*bid.aggressiveness) return 0;//wait more before bidding
                 else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
                     return bid.maxBid;
                 else return bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice();

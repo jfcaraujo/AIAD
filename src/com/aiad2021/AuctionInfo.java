@@ -4,13 +4,12 @@ package com.aiad2021;
 public class AuctionInfo {
 
     private final String type;
-    private Product product;
     private final double basePrice;
     private double winningPrice;
     private final String ip;
     private final double minBid;
 
-    public AuctionInfo(String type /*, Product product*/, double basePrice, double minBid, double winningPrice, String ip){
+    public AuctionInfo(String type, double basePrice, double minBid, double winningPrice, String ip){
         this.type = type;
         this.basePrice = basePrice;
         this.minBid = minBid;
