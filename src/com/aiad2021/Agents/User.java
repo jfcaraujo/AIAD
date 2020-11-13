@@ -88,6 +88,11 @@ public class User extends Agent {
         //todo
     }
 
+
+    private void getStatus(String auctionId) {
+
+    }
+
     // Bid
     class FIPARequestBid extends AchieveREInitiator {
 
@@ -104,7 +109,7 @@ public class User extends Agent {
 
         }
 
-        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {//todo why a vector?
             Vector<ACLMessage> v = new Vector<ACLMessage>();
             // ...
 
@@ -275,10 +280,13 @@ public class User extends Agent {
             case "join":
                 joinAuction(parts[1]); //todo parse auction id
                 break;
+            case "status":
+                getStatus(parts[1]);
+                break;
             default:
-                System.out.println("Invalid comand");
+                System.out.println("Invalid command");
         }
-
+//Todo isn't this unreachable?
         if(message.equals("join")){ //todo adapt to bid on the auction i type
             System.out.println("accepted");
             joinAuction("Auction:1"); //todo parse auction id

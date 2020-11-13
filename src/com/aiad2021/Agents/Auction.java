@@ -40,7 +40,7 @@ public class Auction extends Agent {
     private AuctionGUI auctionGUI;
 
     @Override
-    protected void setup(){
+    protected void setup() {
         //used to get parameters passes on initialization
         Object[] args = this.getArguments();
 
@@ -51,10 +51,10 @@ public class Auction extends Agent {
         this.basePrice = (double) args[3]; //todo change
         this.winningPrice = this.basePrice;//todo add min bid
         this.product = new Product(); //TODO pass the id
-        this.auctionGUI = new AuctionGUI(""+id);
+        this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
-       //this.owner = (User) args[5];
-        
+        //this.owner = (User) args[5];
+
         this.currentWinnerId = " "; //todo
         this.amountOfBids = 0;
         this.participants = new ArrayList<>();
@@ -63,10 +63,10 @@ public class Auction extends Agent {
         System.out.println("My GUID is " + getAID().getName());
         System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
 
-        System.out.println( "Id: " + this.id+"\n");
+        System.out.println("Id: " + this.id + "\n");
 
         //yellow pages setup
-        this.serviceName = "Auction:"+this.id;
+        this.serviceName = "Auction:" + this.id;
 
         try {
             DFAgentDescription dfd = new DFAgentDescription();
@@ -80,22 +80,21 @@ public class Auction extends Agent {
             sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
             sd.addProperties(new Property("type", this.type));
             /*sd.addProperties(new Property("product",this.product));*/ //todo check about products
-            sd.addProperties(new Property("basePrice",this.basePrice));
-            sd.addProperties(new Property("winningPrice",this.winningPrice));
+            sd.addProperties(new Property("basePrice", this.basePrice));
+            sd.addProperties(new Property("winningPrice", this.winningPrice));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
-        }
-        catch (FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
 
-        addBehaviour(new notifyWinner(this,(this.duration+5)*1000));
+        addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
     }
 
     //notify winner
-    class notifyWinner extends WakerBehaviour{
+    class notifyWinner extends WakerBehaviour {
 
         private Agent a;
 
@@ -107,7 +106,7 @@ public class Auction extends Agent {
         @Override
         protected void onWake() {
             super.onWake();
-            System.out.println("Auction:" + this.a.getAID()+ " ended");
+            System.out.println("Auction:" + this.a.getAID() + " ended");
             //todo message the winner
             this.a.doDelete();
         }
@@ -126,9 +125,11 @@ public class Auction extends Agent {
 
             ACLMessage reply = request.createReply();
 
-            if(bidValue > winningPrice){
+            if (bidValue > winningPrice) {
                 reply.setPerformative(ACLMessage.AGREE);
-            }else{
+                winningPrice = bidValue;
+                currentWinnerId = request.getSender().getName();
+            } else {
                 reply.setPerformative(ACLMessage.REFUSE);
             }
             return reply;
@@ -138,17 +139,17 @@ public class Auction extends Agent {
 
             ACLMessage result = request.createReply();
 
-            //update winning price
+           /* //update winning price
             winningPrice = Double.parseDouble(request.getContent());
             //update current winner
             currentWinnerId = request.getSender().getName();
 
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent("You are winning");
+            result.setContent("You are winning");*/
 
             //posso enviar tbm objetos se quiser
-            //result.setContentObject(new jade.util.Vector());
-
+            result.setPerformative(ACLMessage.INFORM);
+            result.setContent(winningPrice+" "+currentWinnerId);
 
             return result;
         }
