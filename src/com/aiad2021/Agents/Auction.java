@@ -156,6 +156,41 @@ public class Auction extends Agent {
 
     }
 
-    //subscribe
+    class FIPASubscribeResp extends AchieveREResponder {
+
+        public FIPASubscribeResp(Agent a, MessageTemplate mt) {
+            super(a, mt);
+        }
+
+        protected ACLMessage handleRequest(ACLMessage request) {
+
+            if(!request.getContent().equals("subscribe"))
+                System.out.println("Received "+request.getContent() +" instead of subscribe");
+
+            ACLMessage reply = request.createReply();
+            reply.setPerformative(ACLMessage.AGREE);
+            return reply;
+        }
+
+        protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+
+            ACLMessage result = request.createReply();
+
+           /* //update winning price
+            winningPrice = Double.parseDouble(request.getContent());
+            //update current winner
+            currentWinnerId = request.getSender().getName();
+
+            result.setPerformative(ACLMessage.INFORM);
+            result.setContent("You are winning");*/
+
+            //posso enviar tbm objetos se quiser
+            result.setPerformative(ACLMessage.INFORM);
+            result.setContent(winningPrice+" "+currentWinnerId);
+
+            return result;
+        }
+
+    }
 
 }

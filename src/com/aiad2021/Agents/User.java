@@ -84,17 +84,13 @@ public class User extends Agent {
     }
 
     private void subscribeAuction(String auctionId){
-        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+       /* ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
         message.addReceiver(new AID(auctionId, false));
         message.setContent("subscribe");
-        this.send(message);
+        this.send(message);*/
+        addBehaviour(new FIPASubscribe(this, new ACLMessage(ACLMessage.SUBSCRIBE),auctionId));
     }
-
-
-    private void getStatus(String auctionId) {
-
-    }
-
+    
     // Bid
     class FIPARequestBid extends AchieveREInitiator {
 
@@ -111,8 +107,52 @@ public class User extends Agent {
 
         }
 
-        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {//todo why a vector?
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<ACLMessage>();
+            // ...
+
+            msg.addReceiver(new AID(this.auctionId, false));
+            msg.setContent(this.msgContent);
+
+            v.add(msg);
+            return v;
+        }
+
+        protected void handleAgree(ACLMessage agree) {
+            System.out.println(agree);
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+            makeBid(auctionId); //todo update bids
+            System.out.println(refuse);
+        }
+
+        protected void handleInform(ACLMessage inform) {
+            //todo idk
+            System.out.println(inform);
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+            makeBid(auctionId); //todo try without updating teh bid
+            System.out.println(failure);
+        }
+
+    }
+
+    class FIPASubscribe extends AchieveREInitiator {
+
+        private String auctionId;
+        private String msgContent;
+
+        public FIPASubscribe(Agent a, ACLMessage msg, String auctionId) {
+            super(a, msg);
+            this.auctionId = auctionId;
+            this.msgContent = "subscribe";
+
+        }
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<>();
             // ...
 
             msg.addReceiver(new AID(this.auctionId, false));
@@ -281,9 +321,6 @@ public class User extends Agent {
                 break;
             case "join":
                 joinAuction(parts[1]); //todo parse auction id
-                break;
-            case "subscribe":
-                subscribeAuction(parts[1]);
                 break;
             default:
                 System.out.println("Invalid command");
