@@ -353,7 +353,7 @@ public class User extends Agent {
         //todo avoid bad messages
         switch (parts[0]) {
             case "create":
-                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
+                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5].substring(parts[5].length()-1)));
                 break;
             case "join":
                 subscribeAuction(parts[1]);
