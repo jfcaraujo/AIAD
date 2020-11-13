@@ -30,6 +30,7 @@ public class User extends Agent {
     private double money;
     CommunicationGUI gui;
 
+    private Hashtable<String, Bid> bidsList;
     private Hashtable<String, AuctionInfo> auctionsList;
 
     // private ArrayList;
@@ -87,10 +88,6 @@ public class User extends Agent {
         } catch (StaleProxyException e) {
             e.printStackTrace();
         }
-    }
-
-    private void joinAuction(String auctionId) {
-        makeBid(auctionId, 0);
     }
 
     private void makeBid(String auctionId, double bidValue) {
@@ -359,9 +356,9 @@ public class User extends Agent {
                 subscribeAuction(parts[1]);
                 break;
             case "bid":
-                System.out.println(parts[1]);
-                System.out.println(parts[2]);
                 makeBid(parts[1], Double.parseDouble(parts[2]));
+            case "autobid":
+                createAutoBid(parts[1], Integer.parseInt(parts[2]), Double.parseDouble(parts[3]));
             default:
                 System.out.println("Invalid command");
         }
@@ -383,6 +380,11 @@ public class User extends Agent {
         }
     }
 
+    private void createAutoBid(String auctionId, int aggressiveness, double maxBid) {
+        Bid bid = new Bid(maxBid, aggressiveness, auctionId);
+        bidsList.put(auctionId, bid);
+        makeBid(auctionId, getNewBid(bid));
+    }
 }
 
 class Bid {
