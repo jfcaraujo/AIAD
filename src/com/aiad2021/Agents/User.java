@@ -73,14 +73,15 @@ public class User extends Agent {
                 if (parts.length == 3) {//if regular inform
                     System.out.println("INFORM WAS " + msg);
                     String auctionID = msg.getSender().getName().split("@")[0];
-                    auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                     if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
+                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("I'm starting to lose");
                         makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                     } else if (parts[0].equals("You")) {//if end of auction
                         gui.addText(msg.getContent());
-                    } else
-                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                    } else{
+                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
+                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);}
                 }
             } else {
                 block();
@@ -88,10 +89,10 @@ public class User extends Agent {
         }
     }
 
-    private void createAuction(int id, String type, int duration, double basePrice, int prodID) {
+    private void createAuction(int id, String type, int duration, double basePrice, double minBid) {
 
         try {
-            Object[] params = {id, type, duration, basePrice, prodID, this};
+            Object[] params = {id, type, duration, basePrice, minBid, this};
             // Agent path on jade = com.aiad2021.Agents
             AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
                     "com.aiad2021.Agents.Auction", params);
@@ -163,6 +164,10 @@ public class User extends Agent {
         }
 
         protected void handleInform(ACLMessage inform) {//todo delete
+
+            if(auctionInfo.getType().equals("fprice")){
+                gui.addText("INFORM: " + auctionId + " - " + inform.getContent());
+            }else
             //means that i am winning do nothing
             gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
@@ -211,6 +216,7 @@ public class User extends Agent {
 
         protected void handleInform(ACLMessage inform) {//todo delete
             //todo idk
+            System.out.println("i am subscribe inform");
             System.out.println(inform);
         }
 
@@ -362,7 +368,7 @@ public class User extends Agent {
         //todo avoid bad messages
         switch (parts[0]) {
             case "create":
-                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5].substring(parts[5].length()-1)));
+                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Double.parseDouble(parts[5].substring(0,parts[5].length()-1)));
                 break;
             case "join":
                 subscribeAuction(parts[1]);
