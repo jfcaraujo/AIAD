@@ -53,9 +53,9 @@ public class User extends Agent {
         gui.addText("\n User guide: Enter ? to get help\n");
 
         gui.addText("My local name is " + getAID().getLocalName());
-        gui.addText("My GUID is " + getAID().getName());
-        gui.addText("My addresses are " + String.join(",", getAID().getAddressesArray()));
-        gui.addText("Id: " + this.id + " Username: " + this.username + "\n");
+        gui.addText("   Id: " + this.id );
+        gui.addText("   Username: " + this.username );
+        gui.addText("   Money available: " + this.money);
 
         //DFSearch();
         DFSubscribe();
