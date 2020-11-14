@@ -77,7 +77,7 @@ public class User extends Agent {
                     if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("I'm starting to lose");
-                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
+                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
                     } else if (parts[0].equals("You")) {//if end of auction
                         gui.addText(msg.getContent()); //todo subtract money
                     } else{
@@ -103,10 +103,10 @@ public class User extends Agent {
         }
     }
 
-    private void makeBid(String auctionId, double bidValue) {
+    private void makeBid(String auctionId, double bidValue, double maxBid) {
 
         if (bidValue == 0) { //create new bid value
-            Bid b = new Bid(money, 1, auctionId);
+            Bid b = new Bid(maxBid, 1, auctionId);
             bidValue = getNewBid(b);
         }//else do nth repeat
         switch ((int) bidValue) {
@@ -160,7 +160,10 @@ public class User extends Agent {
             gui.addText("REFUSE: " + auctionId + " - I will try again with a higher value!");
             //make new bid with a higher value
             auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
-            makeBid(auctionId, 0);
+            if(bidsList.get(auctionId) != null)
+                makeBid(auctionId, 0,bidsList.get(auctionId).maxBid );
+            else
+                makeBid(auctionId, 0,money );
 
         }
 
@@ -370,7 +373,6 @@ public class User extends Agent {
         switch (parts[0]) {
             case "create":
                 if (parts.length == 6) {
-                    System.out.println("command" + message + "lol");
                     if (parts[1].matches("-?\\d+?") && parts[3].matches("-?\\d+?") && parts[4].matches("-?\\d+(\\.\\d+)?") && parts[5].matches("-?\\d+?")) {
                         createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
                     } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
@@ -388,11 +390,11 @@ public class User extends Agent {
                 if(parts.length== 3) {
                     if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?")) {
                         System.out.println(parts[2].length());
-                        makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]));
+                        makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]),money);
                     }else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
                 }else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
                 break;
-            case "autobid"://arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
+            case "autobid": //arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
                 if(parts.length==4) {
                     if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")){
                         createAutoBid("Auction:" +parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
@@ -431,7 +433,7 @@ public class User extends Agent {
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid) {
         Bid bid = new Bid(maxBid, aggressiveness, auctionId);
         bidsList.put(auctionId, bid);
-        makeBid(auctionId, getNewBid(bid));
+        makeBid(auctionId, getNewBid(bid),maxBid);
     }
 
     private void displayAllAuctions(){
