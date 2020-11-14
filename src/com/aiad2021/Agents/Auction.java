@@ -121,7 +121,9 @@ public class Auction extends Agent {
             System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
-            msg.setContent("You won " + this.getAgent().getName().split("@")[0] + "!");
+            //msg.setContent("You won " + this.getAgent().getName().split("@")[0] + "ahahaha!");
+            String price = String.valueOf(winningPrice);
+            msg.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+price);
             send(msg);
 
             informAll(currentWinnerId);

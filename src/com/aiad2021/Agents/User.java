@@ -78,8 +78,11 @@ public class User extends Agent {
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("I'm starting to lose");
                         makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
-                    } else if (parts[0].equals("You")) {//if end of auction
-                        gui.addText(msg.getContent()); //todo subtract money
+                    } else if (parts[0].equals("Won")) {//if end of auction
+                        String winMsg = "You "+ parts[0]+parts[1] + " for "+parts[2]+"€";
+                        gui.addText(winMsg);
+                        //update money
+                        money = money - Double.parseDouble(parts[2]);
                     } else{
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);}
