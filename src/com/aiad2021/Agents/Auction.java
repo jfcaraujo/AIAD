@@ -2,6 +2,7 @@ package com.aiad2021.Agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -23,7 +24,7 @@ public class Auction extends Agent {
 
     private int duration;
     protected String type;
-    private double basePrice;
+    protected double basePrice;
     private double minBid;
     private double winningPrice;
     private double secondBestBid;
@@ -96,6 +97,7 @@ public class Auction extends Agent {
         addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
         addBehaviour(new FIPASubscribeResp(this, MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE)));
+        //addBehaviour(new DutchAuctionBehaviour(this,this,2*1000));
     }
 
     //notify winner
@@ -127,6 +129,30 @@ public class Auction extends Agent {
             auctionGUI.setVisible(false);
 
             this.a.doDelete();
+        }
+    }
+
+    //Dutch Auction
+
+    class DutchAuctionBehaviour extends TickerBehaviour{
+
+        private Auction auction;
+        private Agent a;
+
+        public DutchAuctionBehaviour(Agent a,Auction auction,  long period) {
+            super(a, period);
+            this.a = a;
+            this.auction = auction;
+        }
+
+        @Override
+        protected void onTick() {
+            this.auction.basePrice = this.auction.basePrice - 5.00;
+
+            if(this.auction.basePrice <= 0.00)
+                this.a.doDelete();
+
+            System.out.println(this.auction.basePrice);
         }
     }
 
