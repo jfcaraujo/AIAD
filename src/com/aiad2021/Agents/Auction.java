@@ -108,7 +108,7 @@ public class Auction extends Agent {
         protected void onWake() {
 
             super.onWake();
-            System.out.println("how many participants: " + participants.size());
+
             System.out.println("Auction:" + this.a.getAID() + " ended");
             System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
@@ -148,14 +148,14 @@ public class Auction extends Agent {
                     }
                     break;
                 case "fprice":
-                    System.out.println("how many participants:" + participants.size());
+
                     reply.setPerformative(ACLMessage.INFORM);
                     if(MadeOffer(request.getSender())){
                         reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
                         break;
                     }
                     if (bidValue >= minBid) {
-                        System.out.println("New BID: " + bidValue + " min " + minBid);
+
                         if(bidValue > winningPrice) {
                             winningPrice = bidValue;
                             currentWinnerId = request.getSender().getName().split("@")[0];
@@ -175,7 +175,7 @@ public class Auction extends Agent {
 
             result.setPerformative(ACLMessage.INFORM);
             result.setContent(winningPrice + " " + currentWinnerId);
-            System.out.println("am gonna inform all the bitches");
+
             informAll(request.getSender().getName());
 
             return result;
@@ -193,7 +193,7 @@ public class Auction extends Agent {
 
             if (!request.getContent().equals("subscribe"))
                 System.out.println("Received " + request.getContent() + " instead of subscribe");
-            System.out.println("am i even adding people");
+
             ACLMessage reply = request.createReply();
             reply.setPerformative(ACLMessage.AGREE);
             addParticipant(request.getSender());
@@ -202,7 +202,6 @@ public class Auction extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
 
-            System.out.println("Am i alive");
             ACLMessage result = request.createReply();
 
             result.setPerformative(ACLMessage.INFORM);
@@ -214,10 +213,10 @@ public class Auction extends Agent {
     }
 
     public void informAll(String aidName) {//argument is person to be excluded of inform all
-        System.out.println("\nIM GONNA TO INFORM EVERYONEEEEEEEEEEEEEE");
+
         for (AID participant : this.participants) {
             System.out.println("-------participant--------" + participant.getName());
-            if (!participant.getName().equals(aidName)) {
+            if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 message.setContent(winningPrice + " " + currentWinnerId);
@@ -246,7 +245,7 @@ public class Auction extends Agent {
                 break;
             }
         }
-        System.out.println("i have found " + found);
+
         if (!found){
             this.madeOffer.add(aid);
         }
