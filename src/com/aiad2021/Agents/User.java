@@ -165,7 +165,7 @@ public class User extends Agent {
 
         protected void handleInform(ACLMessage inform) {//todo delete
 
-            if(auctionInfo.getType().equals("fprice")){
+            if(auctionInfo.getType().equals("fprice") || auctionInfo.getType().equals("sprice")){
                 gui.addText("INFORM: " + auctionId + " - " + inform.getContent());
             }else
             //means that i am winning do nothing

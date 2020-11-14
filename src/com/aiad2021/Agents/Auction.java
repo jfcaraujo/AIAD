@@ -26,6 +26,7 @@ public class Auction extends Agent {
     private double basePrice;
     private double minBid;
     private double winningPrice;
+    private double secondBestBid;
     private int amountOfBids;
     private String currentWinnerId;
 
@@ -50,6 +51,7 @@ public class Auction extends Agent {
         this.basePrice = (double) args[3]; //todo change
         this.minBid = (double) args[4];
         this.winningPrice = this.basePrice - this.minBid;
+        this.secondBestBid = this.basePrice - this.minBid;
         this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
         //this.owner = (User) args[5];
@@ -108,6 +110,8 @@ public class Auction extends Agent {
         protected void onWake() {
 
             super.onWake();
+            if(type.equals("sprice"))
+                    winningPrice = secondBestBid;
 
             System.out.println("Auction:" + this.a.getAID() + " ended");
             System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
@@ -159,6 +163,27 @@ public class Auction extends Agent {
                         if(bidValue > winningPrice) {
                             winningPrice = bidValue;
                             currentWinnerId = request.getSender().getName().split("@")[0];
+                        }
+                        reply.setContent("Your offer was accepted");
+                    }
+                    else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
+                    break;
+
+                case "sprice":
+
+                    reply.setPerformative(ACLMessage.INFORM);
+                    if(MadeOffer(request.getSender())){
+                        reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
+                        break;
+                    }
+                    if (bidValue >= minBid) {
+
+                        if(bidValue > winningPrice) {
+                            secondBestBid = winningPrice;
+                            winningPrice = bidValue;
+                            currentWinnerId = request.getSender().getName().split("@")[0];
+                        }else if(bidValue > secondBestBid){
+                            secondBestBid = bidValue;
                         }
                         reply.setContent("Your offer was accepted");
                     }
