@@ -372,7 +372,7 @@ public class User extends Agent {
                 if (parts.length == 6) {
                     System.out.println("command" + message + "lol");
                     if (parts[1].matches("-?\\d+?") && parts[3].matches("-?\\d+?") && parts[4].matches("-?\\d+(\\.\\d+)?") && parts[5].matches("-?\\d+?")) {
-                        createAuction(Integer.parseInt("Auction:" +parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
+                        createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
                     } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
                 } else gui.addText("Invalid create command. Expecting: create id type duration basePrice productID ");
                 break;
