@@ -57,7 +57,7 @@ public class User extends Agent {
         gui.addText("My addresses are " + String.join(",", getAID().getAddressesArray()));
         gui.addText("Id: " + this.id + " Username: " + this.username + "\n");
 
-        DFSearch();
+        //DFSearch();
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
@@ -79,7 +79,7 @@ public class User extends Agent {
                         gui.addText("I'm starting to lose");
                         makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                     } else if (parts[0].equals("You")) {//if end of auction
-                        gui.addText(msg.getContent());
+                        gui.addText(msg.getContent()); //todo subtract money
                     } else{
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);}
@@ -95,7 +95,7 @@ public class User extends Agent {
         try {
             Object[] params = {id, type, duration, basePrice, minBid, this};
             // Agent path on jade = com.aiad2021.Agents
-            AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
+            AgentController ac = getContainerController().createNewAgent("Auction:"+params[0],
                     "com.aiad2021.Agents.Auction", params);
             ac.start();
         } catch (StaleProxyException e) {
