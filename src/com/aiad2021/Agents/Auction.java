@@ -119,6 +119,7 @@ public class Auction extends Agent {
         @Override
         protected void onWake() {
 
+            if(!currentWinnerId.equals(" ")){
             super.onWake();
             if(type.equals("sprice"))
                     winningPrice = secondBestBid;
@@ -131,6 +132,7 @@ public class Auction extends Agent {
             String price = String.valueOf(winningPrice);
             msg.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+price);
             send(msg);
+            }else System.out.println("There were no winners");
 
             informAll(currentWinnerId);
 
@@ -300,7 +302,14 @@ public class Auction extends Agent {
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                message.setContent(winningPrice + " " + currentWinnerId);
+                System.out.println("winner name:" + currentWinnerId +"lol");
+                if(!currentWinnerId.equals(" ")) {
+                    System.out.println("Here i am");
+                    message.setContent(winningPrice + " " + currentWinnerId);
+                }
+                else message.setContent("There were no bids for this auction");
+
+                System.out.println("lalala" + message.getContent());
                 this.send(message);
             }
         }
@@ -340,8 +349,10 @@ public class Auction extends Agent {
                 break;
             }
         }
-        if (!found)
+        if (!found) {
             this.participants.add(aid);
+            this.auctionGUI.addText("     !New join alert!" + "     \n" + aid.getName() + "   just joined!\n");
+        }
     }
 
     public boolean MadeOffer(AID aid) {//add participant to subscribers list

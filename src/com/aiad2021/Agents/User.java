@@ -84,8 +84,13 @@ public class User extends Agent {
                         //update money
                         money = money - Double.parseDouble(parts[2]);
                     } else{
-                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
-                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                        System.out.println("i received a message of " + msg.getContent());
+                        if(!parts[0].equals("There")) {
+                            auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
+                            gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                        }else {
+                            gui.addText(auctionID + " ended. " + msg.getContent());
+                        }
                     }
                 }else if(parts.length == 1){
                     if(parts[0].equals("Ended"))
@@ -389,14 +394,14 @@ public class User extends Agent {
         switch (parts[0]) {
             case "create":
                 if (parts.length == 6) {
-                    if (parts[1].matches("-?\\d+?") && parts[3].matches("-?\\d+?") && parts[4].matches("-?\\d+(\\.\\d+)?") && parts[5].matches("-?\\d+?")) {
-                        createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
-                    } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
-                } else gui.addText("Invalid create command. Expecting: create id type duration basePrice productID ");
+                    if (parts[1].matches("\\d+") && parts[3].matches("\\d+") && parts[4].matches("\\d+(\\.\\d+)?") && parts[5].matches("\\d+(\\.\\d+)?")) {
+                        createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Double.parseDouble(parts[5]));
+                    } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and minBid to be a number");
+                } else gui.addText("Invalid create command. Expecting: create id type duration basePrice minBid ");
                 break;
             case "join":
                 if(parts.length == 2) {
-                    if(parts[1].matches("-?\\d+?")){
+                    if(parts[1].matches("\\d+")){
                         gui.addText("Received join request for auction " + parts[1] + "...");
                         subscribeAuction("Auction:"+parts[1]);
                     } else gui.addText("Invalid auction ID. ID needs to be a number");
@@ -404,7 +409,7 @@ public class User extends Agent {
                 break;
             case "bid":
                 if(parts.length== 3) {
-                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?")) {
+                    if(parts[1].matches("\\d+") && parts[2].matches("\\d+(\\.\\d+)?")) {
                         System.out.println(parts[2].length());
                         makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]),money);
                     }else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
@@ -412,7 +417,7 @@ public class User extends Agent {
                 break;
             case "autobid": //arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
                 if(parts.length==4) {
-                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")){
+                    if(parts[1].matches("\\d+") && parts[2].matches("[1-9]\\d*(\\.\\d+)?") && parts[3].matches("\\d+(\\.\\d+)?")){
                         createAutoBid("Auction:" +parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
                     }
                     else gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
