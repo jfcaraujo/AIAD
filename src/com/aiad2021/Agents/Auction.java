@@ -104,8 +104,6 @@ public class Auction extends Agent {
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
         addBehaviour(new FIPASubscribeResp(this, MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE)));
 
-
-
     }
 
     //notify winner
@@ -164,7 +162,6 @@ public class Auction extends Agent {
             this.auction.basePrice = this.auction.basePrice - 5.00;
 
             informAll();
-            System.out.println(this.auction.basePrice);
         }
     }
 

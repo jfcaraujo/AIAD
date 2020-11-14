@@ -256,7 +256,6 @@ public class User extends Agent {
         addBehaviour(new SubscriptionInitiator(this,
                 DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
-                gui.addText("Agent " + getLocalName() + ": Notification received from DF");
                 System.out.println("Agent " + getLocalName() + ": Notification received from DF");
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
@@ -269,7 +268,6 @@ public class User extends Agent {
                             while (it.hasNext()) {
                                 ServiceDescription sd = (ServiceDescription) it.next();
                                 if (sd.getType().equals("auction-listing")) {
-                                    gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                                 }
                                 //properties
                                 int i = 0;
@@ -298,6 +296,15 @@ public class User extends Agent {
                                 }
                                 AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
                                 auctionsList.put(sd.getName(), ai);
+
+                                //Update auctions
+                                gui.addText("\n Received Notification for new auction: \n");
+
+                                    gui.addText("       //        " + sd.getName() + "        //");
+                                    gui.addText("   Base Price  -> " + auctionsList.get(sd.getName()).getBasePrice() + "\n" +
+                                            "   Auction IP   -> " + auctionsList.get(sd.getName()).getIp() + "\n" +
+                                            "   Type           -> " + auctionsList.get(sd.getName()).getType() + "\n" +
+                                            "   Winning Bid -> " + auctionsList.get(sd.getName()).getWinningPrice() + "\n");
                             }
                         }
                     }
