@@ -108,7 +108,7 @@ public class Auction extends Agent {
             super.onWake();
             System.out.println("Auction:" + this.a.getAID() + " ended");
 
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(new AID(currentWinnerId, false));
             msg.setContent("You won " + this.getAgent().getName().split("@")[0] + "!");
             send(msg);
@@ -135,7 +135,6 @@ public class Auction extends Agent {
                 amountOfBids++;
                 winningPrice = bidValue;
                 currentWinnerId = request.getSender().getName().split("@")[0];
-                informAll(request.getSender().getName());
             } else {
                 reply.setContent("" + winningPrice);
                 reply.setPerformative(ACLMessage.REFUSE);
@@ -149,6 +148,8 @@ public class Auction extends Agent {
 
             result.setPerformative(ACLMessage.INFORM);
             result.setContent(winningPrice + " " + currentWinnerId);
+
+            informAll(request.getSender().getName());
 
             return result;
         }
@@ -184,10 +185,10 @@ public class Auction extends Agent {
 
     }
 
-    public void informAll(String aidName) {
+    public void informAll(String aidName) {//argument is person to be excluded of inform all
         for (AID participant : this.participants) {
             if (!participant.getName().equals(aidName)) {
-                ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+                ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 message.setContent(winningPrice + " " + currentWinnerId);
                 this.send(message);
@@ -195,7 +196,7 @@ public class Auction extends Agent {
         }
     }
 
-    public void addParticipant(AID aid) {
+    public void addParticipant(AID aid) {//add participant to subscribers list
         boolean found = false;
         for (AID participant : this.participants) {
             if (participant.getName().equals(aid.getName())) {
