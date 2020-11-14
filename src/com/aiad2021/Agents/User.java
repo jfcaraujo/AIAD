@@ -74,18 +74,25 @@ public class User extends Agent {
                 if (parts.length == 3) {//if regular inform
                     System.out.println("INFORM WAS " + msg);
                     String auctionID = msg.getSender().getName().split("@")[0];
+                    AuctionInfo auctionInfo = auctionsList.get(auctionID);
                     if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
-                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
+                        auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("I'm starting to lose");
-                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
+                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                     } else if (parts[0].equals("Won")) {//if end of auction
-                        String winMsg = "You "+ parts[0]+parts[1] + " for "+parts[2]+"€";
+                        String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
                         gui.addText(winMsg);
                         //update money
-                        money = money - Double.parseDouble(parts[2]);
-                    } else{
-                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
-                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);}
+                        //money = money - Double.parseDouble(parts[2]);
+                    } else {
+                        auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+                        double currentBid = auctionInfo.getCurrentBid();
+                        if (currentBid != 0)
+                            gui.addText("Recuperated " + currentBid + "€ from previous bid!");
+                        money = money + currentBid;
+                        auctionInfo.setCurrentBid(0);
+                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                    }
                 }
             } else {
                 block();
@@ -98,7 +105,7 @@ public class User extends Agent {
         try {
             Object[] params = {id, type, duration, basePrice, minBid, this};
             // Agent path on jade = com.aiad2021.Agents
-            AgentController ac = getContainerController().createNewAgent("Auction:"+params[0],
+            AgentController ac = getContainerController().createNewAgent("Auction:" + params[0],
                     "com.aiad2021.Agents.Auction", params);
             ac.start();
         } catch (StaleProxyException e) {
@@ -106,10 +113,10 @@ public class User extends Agent {
         }
     }
 
-    private void makeBid(String auctionId, double bidValue, double maxBid) {
+    private void makeBid(String auctionId, double bidValue) {
 
         if (bidValue == 0) { //create new bid value
-            Bid b = new Bid(maxBid, 1, auctionId);
+            Bid b = new Bid(money, 1, auctionId);
             bidValue = getNewBid(b);
         }//else do nth repeat
         switch ((int) bidValue) {
@@ -122,7 +129,10 @@ public class User extends Agent {
             default:
                 break;
         }
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, this.auctionsList.get(auctionId), bidValue));
+        AuctionInfo auctionInfo = auctionsList.get(auctionId);
+        money = money - auctionInfo.getCurrentBid();
+        auctionInfo.setCurrentBid(0);
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
     }
 
     private void subscribeAuction(String auctionId) {
@@ -163,20 +173,20 @@ public class User extends Agent {
             gui.addText("REFUSE: " + auctionId + " - I will try again with a higher value!");
             //make new bid with a higher value
             auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
-            if(bidsList.get(auctionId) != null)
-                makeBid(auctionId, 0,bidsList.get(auctionId).maxBid );
+            if (bidsList.get(auctionId) != null)//if autobid
+                makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
             else
-                makeBid(auctionId, 0,money );
+                makeBid(auctionId, 0);
 
         }
 
         protected void handleInform(ACLMessage inform) {//todo delete
 
-            if(auctionInfo.getType().equals("fprice") || auctionInfo.getType().equals("sprice")){
+            if (auctionInfo.getType().equals("fprice") || auctionInfo.getType().equals("sprice")) {
                 gui.addText("INFORM: " + auctionId + " - " + inform.getContent());
-            }else
-            //means that i am winning do nothing
-            gui.addText("INFORM: " + auctionId + " - I am winning !");
+            } else
+                //means that i am winning do nothing
+                gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
 
         protected void handleFailure(ACLMessage failure) {//todo
@@ -378,35 +388,36 @@ public class User extends Agent {
                 if (parts.length == 6) {
                     if (parts[1].matches("-?\\d+?") && parts[3].matches("-?\\d+?") && parts[4].matches("-?\\d+(\\.\\d+)?") && parts[5].matches("-?\\d+?")) {
                         createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
-                    } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
+                    } else
+                        gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
                 } else gui.addText("Invalid create command. Expecting: create id type duration basePrice productID ");
                 break;
             case "join":
-                if(parts.length == 2) {
-                    if(parts[1].matches("-?\\d+?")){
+                if (parts.length == 2) {
+                    if (parts[1].matches("-?\\d+?")) {
                         gui.addText("Received join request for auction " + parts[1] + "...");
-                        subscribeAuction("Auction:"+parts[1]);
+                        subscribeAuction("Auction:" + parts[1]);
                     } else gui.addText("Invalid auction ID. ID needs to be a number");
-                }else gui.addText("Invalid join command. Expecting: join auctionID");
+                } else gui.addText("Invalid join command. Expecting: join auctionID");
                 break;
             case "bid":
-                if(parts.length== 3) {
-                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?")) {
+                if (parts.length == 3) {
+                    if (parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?")) {
                         System.out.println(parts[2].length());
-                        makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]),money);
-                    }else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
-                }else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
+                        makeBid("Auction:" + parts[1], Double.parseDouble(parts[2]));
+                    } else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
+                } else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
                 break;
             case "autobid": //arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
-                if(parts.length==4) {
-                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")){
-                        createAutoBid("Auction:" +parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
-                    }
-                    else gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
+                if (parts.length == 4) {
+                    if (parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")) {
+                        createAutoBid("Auction:" + parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                    } else
+                        gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
                 } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid");
                 break;
             case "list":
-                if(parts.length == 1)
+                if (parts.length == 1)
                     displayAllAuctions();
                 else gui.addText("list command should not have arguments");
             case "?":
@@ -436,14 +447,14 @@ public class User extends Agent {
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid) {
         Bid bid = new Bid(maxBid, aggressiveness, auctionId);
         bidsList.put(auctionId, bid);
-        makeBid(auctionId, getNewBid(bid),maxBid);
+        makeBid(auctionId, getNewBid(bid));
     }
 
-    private void displayAllAuctions(){
+    private void displayAllAuctions() {
         //Update auctions
         DFSearch();
         gui.addText("\n The available auctions are the following: \n");
-        auctionsList.forEach((k,v) -> {
+        auctionsList.forEach((k, v) -> {
             gui.addText("       //        " + k + "        //");
             gui.addText("   Base Price  -> " + v.getBasePrice() + "\n" +
                     "   Auction IP   -> " + v.getIp() + "\n" +

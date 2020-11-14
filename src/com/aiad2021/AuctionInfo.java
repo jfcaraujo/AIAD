@@ -8,6 +8,7 @@ public class AuctionInfo {
     private double winningPrice;
     private final String ip;
     private final double minBid;
+    private double currentBid;
 
     public AuctionInfo(String type, double basePrice, double minBid, double winningPrice, String ip){
         this.type = type;
@@ -15,6 +16,7 @@ public class AuctionInfo {
         this.minBid = minBid;
         this.winningPrice = winningPrice;
         this.ip = ip;
+        this.currentBid=0;
     }
 
     public String getType() {
@@ -39,5 +41,13 @@ public class AuctionInfo {
 
     public double getMinBid() {
         return minBid;
+    }
+
+    public double getCurrentBid() {
+        return currentBid;
+    }
+
+    public void setCurrentBid(double currentBid) {
+        this.currentBid = currentBid;
     }
 }
