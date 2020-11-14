@@ -71,9 +71,9 @@ public class User extends Agent {
             ACLMessage msg = receive(mt);
             if (msg != null) {
                 String[] parts = msg.getContent().split(" ");
+                String auctionID = msg.getSender().getName().split("@")[0];
                 if (parts.length == 3) {//if regular inform
                     System.out.println("INFORM WAS " + msg);
-                    String auctionID = msg.getSender().getName().split("@")[0];
                     if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                         gui.addText("I'm starting to lose");
@@ -85,7 +85,13 @@ public class User extends Agent {
                         money = money - Double.parseDouble(parts[2]);
                     } else{
                         auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
-                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);}
+                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                    }
+                }else if(parts.length == 1){
+                    if(parts[0].equals("Ended"))
+                        gui.addText( "Dutch " + auctionID + " ended ");
+                    else
+                        gui.addText( "Dutch " + auctionID + " price decreased to " + parts[0] +" €");
                 }
             } else {
                 block();
