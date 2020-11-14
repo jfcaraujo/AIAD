@@ -14,6 +14,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 
+import java.awt.desktop.SystemEventListener;
 import java.util.ArrayList;
 
 import com.aiad2021.view.AuctionGUI;
@@ -94,10 +95,17 @@ public class Auction extends Agent {
             fe.printStackTrace();
         }
 
-        addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
+        if(this.type.equals("dutch")){
+            addBehaviour(new DutchAuctionBehaviour(this,this,5*1000));
+        }else{
+            addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
+        }
+
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
         addBehaviour(new FIPASubscribeResp(this, MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE)));
-        //addBehaviour(new DutchAuctionBehaviour(this,this,2*1000));
+
+
+
     }
 
     //notify winner
@@ -149,11 +157,13 @@ public class Auction extends Agent {
 
         @Override
         protected void onTick() {
-            this.auction.basePrice = this.auction.basePrice - 5.00;
 
             if(this.auction.basePrice <= 0.00)
                 this.a.doDelete();
 
+            this.auction.basePrice = this.auction.basePrice - 5.00;
+
+            informAll();
             System.out.println(this.auction.basePrice);
         }
     }
@@ -184,6 +194,7 @@ public class Auction extends Agent {
                         reply.setPerformative(ACLMessage.REFUSE);
                     }
                     break;
+
                 case "fprice":
 
                     reply.setPerformative(ACLMessage.INFORM);
@@ -200,6 +211,18 @@ public class Auction extends Agent {
                         reply.setContent("Your offer was accepted");
                     }
                     else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
+                    break;
+
+                case "dutch":
+
+                    if(currentWinnerId.equals(" ")){
+                        reply.setPerformative(ACLMessage.INFORM_IF);
+                        reply.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+basePrice);
+                        currentWinnerId = "Dutch";
+                    } else {
+                        reply.setPerformative(ACLMessage.FAILURE);
+                    }
+
                     break;
 
                 case "sprice":
@@ -284,6 +307,32 @@ public class Auction extends Agent {
                 this.send(message);
             }
         }
+
+
+    }
+
+    public void informAll() {//for dutch auctions
+
+        if(currentWinnerId.equals("Dutch")){
+            for (AID participant : this.participants) {
+                System.out.println("-------participant--------" + participant.getName());
+                ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
+                message.addReceiver(participant);
+                message.setContent("Ended");
+                this.send(message);
+            }
+            this.doDelete();
+        }else{
+            for (AID participant : this.participants) {
+                System.out.println("-------participant--------" + participant.getName());
+                ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
+                message.addReceiver(participant);
+                message.setContent(String.valueOf(basePrice));
+                this.send(message);
+            }
+        }
+
+
     }
 
     public void addParticipant(AID aid) {//add participant to subscribers list
