@@ -28,8 +28,8 @@ public class CommunicationGUI extends JFrame{
             @Override
             public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode()==KeyEvent.VK_ENTER){
-                    user.handleMessage(textArea1.getText());
                     textArea2.setText(textArea2.getText() + "\n Command inserted: "+ textArea1.getText());
+                    user.handleMessage(textArea1.getText().substring(0,textArea1.getText().length() -1));
                     textArea1.setText("");
                 }
             }

@@ -12,8 +12,9 @@ public class AuctionGUI extends JFrame{
         textArea2 = new JTextArea(500,500);
         textArea2.setText("");
         textArea2.setLineWrap(true);
+        textArea2.setEditable(false);
 
-        this.auctionName = auctionName;
+        this.auctionName = "Auction:" + auctionName;
 
         add(panel1);
         panel1.setSize(515,560);
