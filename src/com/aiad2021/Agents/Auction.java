@@ -188,7 +188,7 @@ public class Auction extends Agent {
     public void informAll(String aidName) {//argument is person to be excluded of inform all
         for (AID participant : this.participants) {
             if (!participant.getName().equals(aidName)) {
-                ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+                ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 message.setContent(winningPrice + " " + currentWinnerId);
                 this.send(message);

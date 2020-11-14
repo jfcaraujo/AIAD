@@ -64,27 +64,24 @@ public class User extends Agent {
 
     class ListeningBehaviour extends CyclicBehaviour {
 
-        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-        MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
+        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
 
         public void action() {
             ACLMessage msg = receive(mt);
-            ACLMessage msg2 = receive(mt2);
             if (msg != null) {
                 String[] parts = msg.getContent().split(" ");
                 if (parts.length == 3) {//if regular inform
-                    gui.addText(msg.getSender().getName());
                     System.out.println("INFORM WAS " + msg);
                     String auctionID = msg.getSender().getName().split("@")[0];
                     auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
                     if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
                         gui.addText("I'm starting to lose");
                         makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
+                    } else if (parts[0].equals("You")) {//if end of auction
+                        gui.addText(msg.getContent());
                     } else
-                        gui.addText("New winner of " + auctionID.split("@")[0] + " is " + parts[1] + " with a current bid of " + parts[0]);
+                        gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
                 }
-            } else if (msg2 != null) {
-                gui.addText(msg2.getContent());
             } else {
                 block();
             }
