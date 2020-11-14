@@ -138,6 +138,12 @@ public class Auction extends Agent {
 
             auctionGUI.setVisible(false);
 
+            try {
+                DFService.deregister(a);
+            } catch (FIPAException e) {
+                e.printStackTrace();
+            }
+
             this.a.doDelete();
         }
     }
@@ -158,8 +164,15 @@ public class Auction extends Agent {
         @Override
         protected void onTick() {
 
-            if(this.auction.basePrice <= 0.00)
+            if(this.auction.basePrice <= 0.00){
+                try {
+                    DFService.deregister(a);
+                } catch (FIPAException e) {
+                    e.printStackTrace();
+                }
                 this.a.doDelete();
+            }
+
 
             this.auction.basePrice = this.auction.basePrice - 5.00;
 
@@ -326,6 +339,11 @@ public class Auction extends Agent {
                 message.addReceiver(participant);
                 message.setContent("Ended");
                 this.send(message);
+            }
+            try {
+                DFService.deregister(this);
+            } catch (FIPAException e) {
+                e.printStackTrace();
             }
             this.doDelete();
         }else{

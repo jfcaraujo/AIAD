@@ -57,7 +57,6 @@ public class User extends Agent {
         gui.addText("   Username: " + this.username );
         gui.addText("   Money available: " + this.money);
 
-        //DFSearch();
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
@@ -261,7 +260,7 @@ public class User extends Agent {
         addBehaviour(new SubscriptionInitiator(this,
                 DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
-                System.out.println("Agent " + getLocalName() + ": Notification received from DF");
+               //System.out.println("Agent " + getLocalName() + ": Notification received from DF");
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
                     if (results.length > 0) {
@@ -322,8 +321,8 @@ public class User extends Agent {
     }
 
     private void DFSearch() {
-        // Search for services of type "weather-forecast"
         gui.addText("Agent " + getLocalName() + " searching for services of type \"auction-listing\"");
+        Hashtable<String, AuctionInfo> tmp = new Hashtable<>();
         try {
             // Build the description used as template for the search
             DFAgentDescription template = new DFAgentDescription();
@@ -333,7 +332,7 @@ public class User extends Agent {
 
             SearchConstraints sc = new SearchConstraints();
             // We want to receive 10 results at most
-            sc.setMaxResults(10L);
+            sc.setMaxResults(50L);
 
             DFAgentDescription[] results = DFService.search(this, template, sc);
             if (results.length > 0) {
@@ -346,7 +345,7 @@ public class User extends Agent {
                     while (it.hasNext()) {
                         ServiceDescription sd = (ServiceDescription) it.next();
                         if (sd.getType().equals("auction-listing")) {
-                            gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
+                            //gui.addText("- Service \"" + sd.getName() + "\" provided by agent " + provider.getName());
                         }
                         //properties
                         int i = 0;
@@ -370,16 +369,18 @@ public class User extends Agent {
                                 case 3:
                                     currentPrice = Double.parseDouble((String) p.getValue());
                                     break;
-
                             }
                             i++;
                         }
                         AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
-                        auctionsList.put(sd.getName(), ai);
+                        tmp.put(sd.getName(), ai);
                     }
                 }
+                //update auction list
+               auctionsList = tmp;
+
             } else {
-                gui.addText("Agent " + getLocalName() + " did not find any weather-forecast service");
+                gui.addText("Agent " + getLocalName() + " did not find any auction-listing service");
             }
         } catch (FIPAException fe) {
             fe.printStackTrace();
