@@ -46,6 +46,7 @@ public class User extends Agent {
         this.money = (double) args[2];
 
         this.auctionsList = new Hashtable<>();
+        this.bidsList = new Hashtable<>();
 
         gui = new CommunicationGUI(this);
         gui.setVisible(true);
@@ -63,24 +64,37 @@ public class User extends Agent {
 
     class ListeningBehaviour extends CyclicBehaviour {
 
-        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
+        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+        MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
 
         public void action() {
-
             ACLMessage msg = receive(mt);
-
+            ACLMessage msg2 = receive(mt2);
             if (msg != null) {
-                gui.addText(msg.getContent());
+                String[] parts = msg.getContent().split(" ");
+                if (parts.length == 3) {//if regular inform
+                    gui.addText(msg.getSender().getName());
+                    System.out.println("INFORM WAS " + msg);
+                    String auctionID = msg.getSender().getName().split("@")[0];
+                    auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
+                    if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
+                        gui.addText("I'm starting to lose");
+                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
+                    } else
+                        gui.addText("New winner of " + auctionID.split("@")[0] + " is " + parts[1] + " with a current bid of " + parts[0]);
+                }
+            } else if (msg2 != null) {
+                gui.addText(msg2.getContent());
             } else {
                 block();
             }
         }
     }
 
-    private void createAuction(int id, String type, int duration, double baseprice, int prodID) {
+    private void createAuction(int id, String type, int duration, double basePrice, int prodID) {
 
         try {
-            Object[] params = {id, type, duration, baseprice, prodID, this};
+            Object[] params = {id, type, duration, basePrice, prodID, this};
             // Agent path on jade = com.aiad2021.Agents
             AgentController ac = getContainerController().createNewAgent(String.valueOf(params[0]),
                     "com.aiad2021.Agents.Auction", params);
@@ -151,7 +165,7 @@ public class User extends Agent {
 
         }
 
-        protected void handleInform(ACLMessage inform) {
+        protected void handleInform(ACLMessage inform) {//todo delete
             //means that i am winning do nothing
             gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
@@ -189,6 +203,7 @@ public class User extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
             System.out.println(agree);
+            gui.addText("Joined " + agree.getSender().getName().split("@")[0] + ", you will now receive notifications!");
         }
 
         /*protected void handleRefuse(ACLMessage refuse) {
@@ -197,7 +212,7 @@ public class User extends Agent {
             System.out.println(refuse);
         }*/
 
-        protected void handleInform(ACLMessage inform) {
+        protected void handleInform(ACLMessage inform) {//todo delete
             //todo idk
             System.out.println(inform);
         }
@@ -356,11 +371,14 @@ public class User extends Agent {
                 subscribeAuction(parts[1]);
                 break;
             case "bid":
+                System.out.println(parts[2].length());
                 makeBid(parts[1], Double.parseDouble(parts[2]));
-            case "autobid":
-                createAutoBid(parts[1], Integer.parseInt(parts[2]), Double.parseDouble(parts[3]));
+                break;
+            case "autobid"://arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
+                createAutoBid(parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                break;
             default:
-                System.out.println("Invalid command");
+                System.out.println("Invalid command ????");
         }
     }
 
@@ -380,7 +398,7 @@ public class User extends Agent {
         }
     }
 
-    private void createAutoBid(String auctionId, int aggressiveness, double maxBid) {
+    private void createAutoBid(String auctionId, double aggressiveness, double maxBid) {
         Bid bid = new Bid(maxBid, aggressiveness, auctionId);
         bidsList.put(auctionId, bid);
         makeBid(auctionId, getNewBid(bid));
@@ -389,11 +407,11 @@ public class User extends Agent {
 
 class Bid {
     double maxBid;
-    int aggressiveness;
+    double aggressiveness;
     //int delay;
     String auctionId;
 
-    public Bid(double maxBid, int aggressiveness, String auctionId) {
+    public Bid(double maxBid, double aggressiveness, String auctionId) {
         this.maxBid = maxBid;
         this.aggressiveness = aggressiveness;
         //this.delay = delay;
