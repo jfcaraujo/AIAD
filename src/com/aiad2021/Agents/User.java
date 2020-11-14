@@ -50,6 +50,7 @@ public class User extends Agent {
 
         gui = new CommunicationGUI(this);
         gui.setVisible(true);
+        gui.addText("\n User guide: Enter ? to get help\n");
 
         gui.addText("My local name is " + getAID().getLocalName());
         gui.addText("My GUID is " + getAID().getName());
@@ -368,20 +369,46 @@ public class User extends Agent {
         //todo avoid bad messages
         switch (parts[0]) {
             case "create":
-                createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Double.parseDouble(parts[5].substring(0,parts[5].length()-1)));
+                if (parts.length == 6) {
+                    System.out.println("command" + message + "lol");
+                    if (parts[1].matches("-?\\d+?") && parts[3].matches("-?\\d+?") && parts[4].matches("-?\\d+(\\.\\d+)?") && parts[5].matches("-?\\d+?")) {
+                        createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Integer.parseInt(parts[5]));
+                    } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and productID to be a number");
+                } else gui.addText("Invalid create command. Expecting: create id type duration basePrice productID ");
                 break;
             case "join":
-                subscribeAuction(parts[1]);
+                if(parts.length == 2) {
+                    if(parts[1].matches("-?\\d+?")){
+                        gui.addText("Received join request for auction " + parts[1] + "...");
+                        subscribeAuction(parts[1]);
+                    } else gui.addText("Invalid auction ID. ID needs to be a number");
+                }else gui.addText("Invalid join command. Expecting: join auctionID");
                 break;
             case "bid":
-                System.out.println(parts[2].length());
-                makeBid(parts[1], Double.parseDouble(parts[2]));
+                if(parts.length== 3) {
+                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?")) {
+                        System.out.println(parts[2].length());
+                        makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]));
+                    }else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
+                }else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
                 break;
             case "autobid"://arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
-                createAutoBid(parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                if(parts.length==4) {
+                    if(parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")){
+                        createAutoBid(parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                    }
+                    else gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
+                } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid");
+                break;
+            case "list":
+                if(parts.length == 1)
+                    displayAllAuctions();
+                else gui.addText("list command should not have arguments");
+            case "?":
+                gui.addText(" Commands available are: create, join, bid, autobid and list");
                 break;
             default:
-                System.out.println("Invalid command ????");
+                gui.addText("Invalid command");
         }
     }
 
@@ -405,6 +432,19 @@ public class User extends Agent {
         Bid bid = new Bid(maxBid, aggressiveness, auctionId);
         bidsList.put(auctionId, bid);
         makeBid(auctionId, getNewBid(bid));
+    }
+
+    private void displayAllAuctions(){
+        //Update auctions
+        DFSearch();
+        gui.addText("\n The available auctions are the following: \n");
+        auctionsList.forEach((k,v) -> {
+            gui.addText("       //        " + k + "        //");
+            gui.addText("   Base Price  -> " + v.getBasePrice() + "\n" +
+                    "   Auction IP   -> " + v.getIp() + "\n" +
+                    "   Type           -> " + v.getType() + "\n" +
+                    "   Winning Bid -> " + v.getWinningPrice() + "\n");
+        });
     }
 }
 

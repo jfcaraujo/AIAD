@@ -61,6 +61,8 @@ public class Auction extends Agent {
         this.participants = new ArrayList<>();
         this.madeOffer = new ArrayList<>();
 
+        displayInformationGUI();
+
         System.out.println("My local name is " + getAID().getLocalName());
         System.out.println("My GUID is " + getAID().getName());
         System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
@@ -191,6 +193,8 @@ public class Auction extends Agent {
                     break;
             }
 
+            displayNewOffer(request.getSender().getName().split("@")[0],bidValue, new ACLMessage(reply.getPerformative()));
+
             return reply;
         }
 
@@ -275,5 +279,31 @@ public class Auction extends Agent {
             this.madeOffer.add(aid);
         }
         return found;
+    }
+
+    public void displayInformationGUI(){
+        auctionGUI.addText("                                                    Auction " + this.id + "\n\n\n\n" +
+                "       Type            ->    " + this.type + "\n" +
+                "       Base Price   ->    " + this.basePrice +"\n" +
+                "       Min Bid         ->    " + this.minBid + "\n\n" );
+
+    }
+
+    public void displayNewOffer(String bidder , double offer , ACLMessage response){
+        switch (this.type) {
+            case "sprice":
+                auctionGUI.addText("                                         New Offer from" + bidder + "\n\n" +
+                        "       Offer By Bidder        ->    " + offer + "\n" +
+                        "       Winner Price            ->    " + this.winningPrice + "\n" +
+                        "       Second Best Offer   ->    " + this.secondBestBid + "\n"+
+                        "       Response                ->    " + response.toString() + "\n\n" );
+                break;
+            default:
+                auctionGUI.addText("                                         New Offer from" + bidder + "\n\n" +
+                        "       Offer By Bidder     ->    " + offer + "\n" +
+                        "       Winner Price         ->    " + this.winningPrice + "\n"+
+                        "       Response            ->    " + response.toString() + "\n\n" );
+                break;
+        }
     }
 }
