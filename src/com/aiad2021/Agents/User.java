@@ -20,8 +20,7 @@ import jade.util.leap.Iterator;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 import static java.lang.Double.max;
 import static java.lang.Double.min;
@@ -369,6 +368,8 @@ public class User extends Agent {
             // We want to receive 10 results at most
             sc.setMaxResults(50L);
 
+            ArrayList<String> currentIDs = new ArrayList<>();
+
             DFAgentDescription[] results = DFService.search(this, template, sc);
             if (results.length > 0) {
                 gui.addText("Agent " + getLocalName() + " found the following auction-listing services:");
@@ -413,12 +414,25 @@ public class User extends Agent {
                             i++;
                         }
                         AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, duration, start, provider.getName());
+                        currentIDs.add(provider.getName().split("@")[0]);
+
                         if (!auctionsList.containsKey(sd.getName()))
                             auctionsList.put(sd.getName(), ai);
                         else auctionsList.get(sd.getName()).setWinningPrice(currentPrice);
-
                     }
                 }
+
+               Set<String> toDelete = new HashSet<>();
+
+                for(String key : auctionsList.keySet()){
+                    if(!currentIDs.contains(key)){
+                        toDelete.add(key);
+                    }
+
+                }
+
+                auctionsList.keySet().removeAll(toDelete);
+
             } else {
                 gui.addText("Agent " + getLocalName() + " did not find any auction-listing service");
             }
