@@ -464,7 +464,7 @@ public class User extends Agent {
             case "join":
                 if (parts.length == 2) {
                     if (parts[1].matches("\\d+")) {
-                        gui.addText("Received join request for auction " + parts[1] + "...");
+                        gui.addText("Processing join request for auction " + parts[1] + "...");
                         subscribeAuction("Auction:" + parts[1]);
                     } else gui.addText("Invalid auction ID. ID needs to be a number");
                 } else gui.addText("Invalid join command. Expecting: join auctionID");
