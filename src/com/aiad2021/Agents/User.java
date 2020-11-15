@@ -130,11 +130,18 @@ public class User extends Agent {
         }
         AuctionInfo auctionInfo = auctionsList.get(auctionId);
         if (b.delay > 0 && !b.receivedDelay) {
-            gui.addText("AutoBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            if (b.smart) {
+                gui.addText("SmartBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            } else {
+                gui.addText("AutoBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            }
             double delay = auctionInfo.getDelay(b.delay);
-            addBehaviour(new delayedBid(this, (long) delay,auctionId));
-            gui.addText("Time remaining: " + delay/1000.0 + " seconds");
-            return ;
+            if (b.delayedBid != null) b.delayedBid.stop();//if a smart bid waiting for delay receives new inform
+            b.delayedBid = new DelayedBid(this, (long) delay, auctionId);
+            addBehaviour(b.delayedBid);
+            gui.addText("Time remaining: " + delay / 1000.0 + " seconds");
+            return;
+
         }
         switch ((int) bidValue) {
             case -1:
@@ -148,7 +155,7 @@ public class User extends Agent {
         }
         money = money - bidValue;
         auctionInfo.setCurrentBid(bidValue);
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue, b.delay));
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
 
     }
 
@@ -163,7 +170,7 @@ public class User extends Agent {
         private AuctionInfo auctionInfo;
         private String msgContent;
 
-        public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo, Double bidValue, Double delay) {
+        public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo, Double bidValue) {
             super(a, msg);
             this.auctionId = auctionId;
             this.auctionInfo = auctionInfo;
@@ -440,8 +447,8 @@ public class User extends Agent {
                     if (parts[1].matches("-?\\d+?") && parts[2].matches("-?\\d+(\\.\\d+)?") && !parts[2].equals("0") && parts[3].matches("-?\\d+(\\.\\d+)?") && parts[3].matches("-?\\d+(\\.\\d+)?")) {
                         createAutoBid("Auction:" + parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), Double.parseDouble(parts[4]));
                     } else
-                        gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
-                } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid");
+                        gui.addText("Invalid autobid command. auctionID, aggressiveness, maxBid and delay need to be of type number ");
+                } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid delay");
                 break;
             case "smartbid":
                 if (parts.length == 3) {
@@ -469,12 +476,16 @@ public class User extends Agent {
         switch (auctionInfo.getType()) {
             case "english":
                 if (bid.smart) {
-                    bid.delay = min(0.95, (auctionInfo.getMovement() - 1) / 10.0);
-                    bid.aggressiveness = max(1.0, auctionInfo.getMovement());
+                    bid.delay = min(0.9, (auctionInfo.getMovement()) / 5.0);//makes sure that the maximum is 0.9
+                    bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
                 }
-                if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness)
-                    bid.delay = 0;//the prices are getting high, time to start bidding //todo change behaviour
-                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)
+                if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
+                    bid.delay = 0;//the prices are getting high, time to start bidding
+                    gui.addText("Prices are getting too high, going to bid now");
+                    if (bid.delayedBid != null) bid.delayedBid.stop(); //cancels the delayedBid
+                    bid.receivedDelay = true;
+                }
+                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() > bid.maxBid)
                     return -1;//auction is too expensive
                 else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
                     return bid.maxBid;
@@ -503,12 +514,12 @@ public class User extends Agent {
         });
     }
 
-    class delayedBid extends WakerBehaviour {
+    class DelayedBid extends WakerBehaviour {
 
         private final String auctionId;
         private Agent a;
 
-        public delayedBid(Agent a, long timeout, String auctionId) {
+        public DelayedBid(Agent a, long timeout, String auctionId) {
             super(a, timeout);
             this.a = a;
             this.auctionId = auctionId;
@@ -517,7 +528,7 @@ public class User extends Agent {
         @Override
         protected void onWake() {
             super.onWake();
-            bidsList.get(auctionId).receivedDelay=true;
+            bidsList.get(auctionId).receivedDelay = true;
             makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
         }
     }
@@ -529,7 +540,8 @@ class Bid {
     double delay;
     String auctionId;
     boolean smart;
-    boolean receivedDelay=false;
+    boolean receivedDelay = false;
+    User.DelayedBid delayedBid;
 
     public Bid(double maxBid, double aggressiveness, String auctionId) {
         this.maxBid = maxBid;
@@ -541,7 +553,7 @@ class Bid {
         this.auctionId = auctionId;
     }
 
-    public Bid(double maxBid, double aggressiveness, String auctionId, double delay) {
+    public Bid(double maxBid, double aggressiveness, String auctionId, double delay) {//to make smart, aggressiveness=0
         this.maxBid = maxBid;
         if (aggressiveness == 0) {
             this.aggressiveness = 1;
