@@ -164,7 +164,7 @@ public class Auction extends Agent {
         @Override
         protected void onTick() {
 
-            if(this.auction.basePrice <= 0.00){
+            if (this.auction.basePrice <= 0.00) {
                 try {
                     DFService.deregister(a);
                 } catch (FIPAException e) {
@@ -208,9 +208,9 @@ public class Auction extends Agent {
 
                 case "dutch":
 
-                    if(currentWinnerId.equals(" ")){
+                    if (currentWinnerId.equals(" ")) {
                         reply.setPerformative(ACLMessage.INFORM_IF);
-                        reply.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+basePrice);
+                        reply.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + basePrice);
                         currentWinnerId = "Dutch";
                     } else {
                         reply.setPerformative(ACLMessage.FAILURE);
@@ -219,35 +219,31 @@ public class Auction extends Agent {
                     break;
 
                 case "sprice":
-
-                    reply.setPerformative(ACLMessage.INFORM);
-                    if (MadeOffer(request.getSender())) {
-                        reply.setContent("You have already bid on this item. First price auctions only accept one bid per user");
-                        break;
-                    }
                     if (bidValue >= minBid) {
-
-                        if(bidValue > winningPrice) {
+                        reply.setPerformative(ACLMessage.INFORM);
+                        if (MadeOffer(request.getSender())) {
+                            reply.setContent("You have already bid on this item. First price auctions only accept one bid per user");
+                            break;
+                        }
+                        reply.setContent("Your offer was accepted");
+                        if (bidValue > winningPrice) {
                             secondBestBid = winningPrice;
                             winningPrice = bidValue;
                             currentWinnerId = request.getSender().getName().split("@")[0];
-                        }else if(bidValue > secondBestBid){
+                        } else if (bidValue > secondBestBid) {
                             secondBestBid = bidValue;
                         }
-                        reply.setContent("Your offer was accepted");
                     } else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
                     break;
 
                 case "fprice":
-
-                    reply.setPerformative(ACLMessage.INFORM);
-                    if (MadeOffer(request.getSender())) {
-                        reply.setContent("You have already bid on this item. Second price auctions only accept one bid per user");
-                        break;
-                    }
                     if (bidValue >= minBid) {
-
-                        if(bidValue > winningPrice) {
+                        reply.setPerformative(ACLMessage.INFORM);
+                        if (MadeOffer(request.getSender())) {
+                            reply.setContent("You have already bid on this item. Second price auctions only accept one bid per user");
+                            break;
+                        }
+                        else if (bidValue > winningPrice) {
                             winningPrice = bidValue;
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
@@ -317,9 +313,9 @@ public class Auction extends Agent {
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                if(currentWinnerId.equals(" ")){
+                if (currentWinnerId.equals(" ")) {
                     message.setContent("Auction ended");
-                }else        if (type.equals("english"))
+                } else if (type.equals("english"))
                     message.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
                 else message.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
                 this.send(message);
