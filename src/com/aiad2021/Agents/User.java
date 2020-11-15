@@ -92,7 +92,7 @@ public class User extends Agent {
                             gui.addText(winMsg);
                             if (auctionInfo.getType().equals("dutch")) money = money - Double.parseDouble(parts[2]);
                         } else if (parts[0].equals("Lost")) { //if lost
-                            String str = "You lost" + auctionID + ", winning bid was" + parts[2] + "€";
+                            String str = "You lost " + auctionID + ", winning bid was" + parts[2] + "€";
                             if (!auctionInfo.getType().equals("english")) {
                                 money = money + auctionInfo.getCurrentBid();
                                 auctionInfo.setCurrentBid(0);
