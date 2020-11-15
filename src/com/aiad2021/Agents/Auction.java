@@ -127,10 +127,10 @@ public class Auction extends Agent {
                 winningPrice = secondBestBid;
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
-            if(currentWinnerId.equals(" "))
+            if (currentWinnerId.equals(" "))
                 System.out.println("Without winners!");
             else
-                System.out.println("    Winner was " + currentWinnerId + " and the price: " + winningPrice+"€");
+                System.out.println("    Winner was " + currentWinnerId + " and the price: " + winningPrice + "€");
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
             String price = String.valueOf(winningPrice);
@@ -193,11 +193,9 @@ public class Auction extends Agent {
         protected ACLMessage handleRequest(ACLMessage request) {
             addParticipant(request.getSender());
             double bidValue = Double.parseDouble(request.getContent());
-
             ACLMessage reply = request.createReply();
             switch (type) {
                 case "english":
-
                     if (bidValue >= winningPrice + minBid) {
                         reply.setPerformative(ACLMessage.AGREE);
                         amountOfBids++;
@@ -208,9 +206,7 @@ public class Auction extends Agent {
                         reply.setPerformative(ACLMessage.REFUSE);
                     }
                     break;
-
                 case "dutch":
-
                     if (currentWinnerId.equals(" ")) {
                         reply.setPerformative(ACLMessage.INFORM_IF);
                         reply.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + basePrice);
@@ -218,9 +214,7 @@ public class Auction extends Agent {
                     } else {
                         reply.setPerformative(ACLMessage.FAILURE);
                     }
-
                     break;
-
                 case "sprice":
                     if (bidValue >= minBid) {
                         reply.setPerformative(ACLMessage.INFORM);
@@ -238,15 +232,13 @@ public class Auction extends Agent {
                         }
                     } else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
                     break;
-
                 case "fprice":
                     if (bidValue >= minBid) {
                         reply.setPerformative(ACLMessage.INFORM);
                         if (MadeOffer(request.getSender())) {
                             reply.setContent("You have already bid on this item. Second price auctions only accept one bid per user");
                             break;
-                        }
-                        else if (bidValue > winningPrice) {
+                        } else if (bidValue > winningPrice) {
                             winningPrice = bidValue;
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
@@ -268,7 +260,7 @@ public class Auction extends Agent {
             result.setPerformative(ACLMessage.INFORM);
             if (type.equals("english"))
                 result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else result.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
+            else result.setContent("" + participants.size());
 
             informAll(request.getSender().getName());
 
@@ -293,7 +285,7 @@ public class Auction extends Agent {
             addParticipant(request.getSender());
             if (type.equals("english"))
                 reply.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else reply.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
+            else reply.setContent(basePrice + " " + participants.size());
             return reply;
         }
 
@@ -303,7 +295,7 @@ public class Auction extends Agent {
             result.setPerformative(ACLMessage.INFORM);
             if (type.equals("english"))
                 result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else result.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
+            else result.setContent(basePrice + " " + participants.size());
             return result;
         }
 
@@ -320,7 +312,7 @@ public class Auction extends Agent {
                     message.setContent("Auction ended");
                 } else if (type.equals("english"))
                     message.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-                else message.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
+                else message.setContent("" + participants.size());
                 this.send(message);
             }
         }
@@ -349,7 +341,7 @@ public class Auction extends Agent {
                 System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                message.setContent(String.valueOf(basePrice));
+                message.setContent(basePrice + " " + participants.size());
                 this.send(message);
             }
         }
