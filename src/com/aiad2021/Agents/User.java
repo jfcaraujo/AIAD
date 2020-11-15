@@ -5,6 +5,7 @@ import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -21,6 +22,9 @@ import jade.wrapper.StaleProxyException;
 
 import java.util.Hashtable;
 import java.util.Vector;
+
+import static java.lang.Double.max;
+import static java.lang.Double.min;
 
 public class User extends Agent {
 
@@ -53,8 +57,8 @@ public class User extends Agent {
         gui.addText("\n User guide: Enter ? to get help\n");
 
         gui.addText("My local name is " + getAID().getLocalName());
-        gui.addText("   Id: " + this.id );
-        gui.addText("   Username: " + this.username );
+        gui.addText("   Id: " + this.id);
+        gui.addText("   Username: " + this.username);
         gui.addText("   Money available: " + this.money);
 
         DFSubscribe();
@@ -71,37 +75,37 @@ public class User extends Agent {
             if (msg != null) {
                 String[] parts = msg.getContent().split(" ");
                 String auctionID = msg.getSender().getName().split("@")[0];
-
-                switch(parts.length) {
+                switch (parts.length) {
                     case 1:
                         if (parts[0].equals("Ended"))
                             gui.addText("Dutch " + auctionID + " ended ");
                         else
                             gui.addText("Dutch " + auctionID + " price decreased to " + parts[0] + " €");
                         break;
-                    case 2:
-                        System.out.println("INFORM WAS " + msg);
+                    case 3://if regular inform
+                        AuctionInfo auctionInfo = auctionsList.get(auctionID);
                         if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
-                            auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
+                            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+                            auctionInfo.setMovement(Integer.parseInt(parts[3]));
                             gui.addText("I'm starting to lose");
-                            makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
-                        }
-                        else if(parts[0].equals("Auction")){
-                            gui.addText( msg.getContent() + ". There was no winner on Auction" + auctionID);
-                        }else {
-                            gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
-                        }
-                        break;
-                    case 3:
-                        if (parts[0].equals("Won")) {//if end of auction
+                            makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
+                        } else if (parts[0].equals("Won")) {//if end of auction
                             String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
                             gui.addText(winMsg);
-                            //update money
-                            money = money - Double.parseDouble(parts[2]);
+                        } else {//update winner of auction
+                            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+                            double currentBid = auctionInfo.getCurrentBid();
+                            if (currentBid != 0)
+                                gui.addText("Recuperated " + currentBid + "€ from previous bid!");
+                            money = money + currentBid;
+                            auctionInfo.setCurrentBid(0);
+                            gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                            break;
                         }
-                        break;
-                    }
-                }else block();
+                }
+            } else {
+                block();
+            }
         }
     }
 
@@ -110,7 +114,7 @@ public class User extends Agent {
         try {
             Object[] params = {id, type, duration, basePrice, minBid, this};
             // Agent path on jade = com.aiad2021.Agents
-            AgentController ac = getContainerController().createNewAgent("Auction:"+params[0],
+            AgentController ac = getContainerController().createNewAgent("Auction:" + params[0],
                     "com.aiad2021.Agents.Auction", params);
             ac.start();
         } catch (StaleProxyException e) {
@@ -118,12 +122,28 @@ public class User extends Agent {
         }
     }
 
-    private void makeBid(String auctionId, double bidValue, double maxBid) {
-
-        if (bidValue == 0) { //create new bid value
-            Bid b = new Bid(maxBid, 1, auctionId);
+    private void makeBid(String auctionId, double bidValue) {
+        Bid b = new Bid(money, 1, auctionId);
+        if (bidsList.containsKey(auctionId))
+            b = bidsList.get(auctionId);
+        else if (bidValue == 0) { //create new bid value
             bidValue = getNewBid(b);
-        }//else do nth repeat
+        }
+        AuctionInfo auctionInfo = auctionsList.get(auctionId);
+        if (b.delay > 0 && !b.receivedDelay) {
+            if (b.smart) {
+                gui.addText("SmartBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            } else {
+                gui.addText("AutoBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            }
+            double delay = max(0, auctionInfo.getDelay(b.delay));
+            if (b.delayedBid != null) b.delayedBid.stop();//if a smart bid waiting for delay receives new inform
+            b.delayedBid = new DelayedBid(this, (long) delay, auctionId);
+            addBehaviour(b.delayedBid);
+            gui.addText("Time remaining: " + delay / 1000.0 + " seconds");
+            return;
+
+        }
         switch ((int) bidValue) {
             case -1:
                 gui.addText("MakeBid - Auction is too expensive!");
@@ -134,7 +154,10 @@ public class User extends Agent {
             default:
                 break;
         }
-        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, this.auctionsList.get(auctionId), bidValue));
+        money = money - bidValue;
+        auctionInfo.setCurrentBid(bidValue);
+        addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
+
     }
 
     private void subscribeAuction(String auctionId) {
@@ -152,13 +175,11 @@ public class User extends Agent {
             super(a, msg);
             this.auctionId = auctionId;
             this.auctionInfo = auctionInfo;
-
             this.msgContent = String.valueOf(bidValue);
-
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
-            Vector<ACLMessage> v = new Vector<ACLMessage>();
+            Vector<ACLMessage> v = new Vector<>();
 
             msg.addReceiver(new AID(this.auctionId, false));
             msg.setContent(this.msgContent);
@@ -175,20 +196,19 @@ public class User extends Agent {
             gui.addText("REFUSE: " + auctionId + " - I will try again with a higher value!");
             //make new bid with a higher value
             auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
-            if(bidsList.get(auctionId) != null)
-                makeBid(auctionId, 0,bidsList.get(auctionId).maxBid );
-            else
-                makeBid(auctionId, 0,money );
+            if (bidsList.get(auctionId) != null) {//if autobid
+                makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
+            } else
+                makeBid(auctionId, 0);
 
         }
 
-        protected void handleInform(ACLMessage inform) {//todo delete
-
-            if(auctionInfo.getType().equals("fprice") || auctionInfo.getType().equals("sprice")){
+        protected void handleInform(ACLMessage inform) {
+            if (auctionInfo.getType().equals("fprice") || auctionInfo.getType().equals("sprice")) {
                 gui.addText("INFORM: " + auctionId + " - " + inform.getContent());
-            }else
-            //means that i am winning do nothing
-            gui.addText("INFORM: " + auctionId + " - I am winning !");
+            } else
+                //means that I am winning do nothing
+                gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
 
         protected void handleFailure(ACLMessage failure) {//todo
@@ -196,7 +216,6 @@ public class User extends Agent {
             //makeBid(auctionId,bidValue);
             gui.addText("FAILURE: " + auctionId);
         }
-
     }
 
     class FIPASubscribe extends AchieveREInitiator {
@@ -224,6 +243,11 @@ public class User extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
             System.out.println(agree);
+            String[] parts = agree.getContent().split(" ");
+            AuctionInfo auctionInfo = auctionsList.get(auctionId);
+            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+            auctionInfo.setMovement(Integer.parseInt(parts[3]));
+            auctionInfo.setUpdated();
             gui.addText("Joined " + agree.getSender().getName().split("@")[0] + ", you will now receive notifications!");
         }
 
@@ -233,8 +257,12 @@ public class User extends Agent {
             System.out.println(refuse);
         }*/
 
-        protected void handleInform(ACLMessage inform) {//todo delete
-            //todo idk
+        protected void handleInform(ACLMessage inform) {
+            String[] parts = inform.getContent().split(" ");
+            AuctionInfo auctionInfo = auctionsList.get(auctionId);
+            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+            auctionInfo.setMovement(Integer.parseInt(parts[3]));
+            System.out.println("i am subscribe inform");
             System.out.println(inform);
         }
 
@@ -261,7 +289,7 @@ public class User extends Agent {
         addBehaviour(new SubscriptionInitiator(this,
                 DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
-               //System.out.println("Agent " + getLocalName() + ": Notification received from DF");
+                //System.out.println("Agent " + getLocalName() + ": Notification received from DF");
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
                     if (results.length > 0) {
@@ -280,6 +308,8 @@ public class User extends Agent {
                                 double basePrice = 0.0;
                                 double minBid = 0.0;
                                 double currentPrice = 0.0;
+                                double duration = 0;
+                                double start = System.currentTimeMillis();
                                 it = sd.getAllProperties();
                                 while (it.hasNext()) {
                                     Property p = (Property) it.next();
@@ -296,20 +326,25 @@ public class User extends Agent {
                                         case 3:
                                             currentPrice = Double.parseDouble((String) p.getValue());
                                             break;
+                                        case 4:
+                                            duration = Double.parseDouble((String) p.getValue());
+                                            break;
                                     }
                                     i++;
                                 }
-                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
-                                auctionsList.put(sd.getName(), ai);
+                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, duration, start, provider.getName());
+                                if (!auctionsList.containsKey(sd.getName()))
+                                    auctionsList.put(sd.getName(), ai);
+                                else auctionsList.get(sd.getName()).setWinningPrice(currentPrice);
 
                                 //Update auctions
                                 gui.addText("\n Received Notification for new auction: \n");
 
-                                    gui.addText("       //        " + sd.getName() + "        //");
-                                    gui.addText("   Base Price  -> " + auctionsList.get(sd.getName()).getBasePrice() + "\n" +
-                                            "   Auction IP   -> " + auctionsList.get(sd.getName()).getIp() + "\n" +
-                                            "   Type           -> " + auctionsList.get(sd.getName()).getType() + "\n" +
-                                            "   Winning Bid -> " + auctionsList.get(sd.getName()).getWinningPrice() + "\n");
+                                gui.addText("       //        " + sd.getName() + "        //");
+                                gui.addText("   Base Price  -> " + auctionsList.get(sd.getName()).getBasePrice() + "\n" +
+                                        "   Auction IP   -> " + auctionsList.get(sd.getName()).getIp() + "\n" +
+                                        "   Type           -> " + auctionsList.get(sd.getName()).getType() + "\n" +
+                                        "   Winning Bid -> " + auctionsList.get(sd.getName()).getWinningPrice() + "\n");
                             }
                         }
                     }
@@ -323,7 +358,6 @@ public class User extends Agent {
 
     private void DFSearch() {
         gui.addText("Agent " + getLocalName() + " searching for services of type \"auction-listing\"");
-        Hashtable<String, AuctionInfo> tmp = new Hashtable<>();
         try {
             // Build the description used as template for the search
             DFAgentDescription template = new DFAgentDescription();
@@ -354,6 +388,8 @@ public class User extends Agent {
                         double basePrice = 0.0;
                         double minBid = 0.0;
                         double currentPrice = 0.0;
+                        double duration = 0;
+                        double start = System.currentTimeMillis();
                         it = sd.getAllProperties();
                         while (it.hasNext()) {
                             Property p = (Property) it.next();
@@ -370,16 +406,19 @@ public class User extends Agent {
                                 case 3:
                                     currentPrice = Double.parseDouble((String) p.getValue());
                                     break;
+                                case 4:
+                                    duration = Double.parseDouble((String) p.getValue());
+                                    break;
                             }
                             i++;
                         }
-                        AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
-                        tmp.put(sd.getName(), ai);
+                        AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, duration, start, provider.getName());
+                        if (!auctionsList.containsKey(sd.getName()))
+                            auctionsList.put(sd.getName(), ai);
+                        else auctionsList.get(sd.getName()).setWinningPrice(currentPrice);
+
                     }
                 }
-                //update auction list
-               auctionsList = tmp;
-
             } else {
                 gui.addText("Agent " + getLocalName() + " did not find any auction-listing service");
             }
@@ -398,39 +437,48 @@ public class User extends Agent {
                 if (parts.length == 6) {
                     if (parts[1].matches("\\d+") && parts[3].matches("\\d+") && parts[4].matches("\\d+(\\.\\d+)?") && parts[5].matches("\\d+(\\.\\d+)?")) {
                         createAuction(Integer.parseInt(parts[1]), parts[2], Integer.parseInt(parts[3]), Double.parseDouble(parts[4]), Double.parseDouble(parts[5]));
-                    } else gui.addText("Invalid create parameters. Expecting id, duration, basePrice and minBid to be a number");
+                    } else
+                        gui.addText("Invalid create parameters. Expecting id, duration, basePrice and minBid to be a number");
                 } else gui.addText("Invalid create command. Expecting: create id type duration basePrice minBid ");
                 break;
             case "join":
-                if(parts.length == 2) {
-                    if(parts[1].matches("\\d+")){
+                if (parts.length == 2) {
+                    if (parts[1].matches("\\d+")) {
                         gui.addText("Received join request for auction " + parts[1] + "...");
-                        subscribeAuction("Auction:"+parts[1]);
+                        subscribeAuction("Auction:" + parts[1]);
                     } else gui.addText("Invalid auction ID. ID needs to be a number");
-                }else gui.addText("Invalid join command. Expecting: join auctionID");
+                } else gui.addText("Invalid join command. Expecting: join auctionID");
                 break;
             case "bid":
-                if(parts.length== 3) {
-                    if(parts[1].matches("\\d+") && parts[2].matches("\\d+(\\.\\d+)?")) {
+                if (parts.length == 3) {
+                    if (parts[1].matches("\\d+") && parts[2].matches("\\d+(\\.\\d+)?")) {
                         System.out.println(parts[2].length());
-                        makeBid("Auction:"+parts[1], Double.parseDouble(parts[2]),money);
-                    }else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
-                }else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
+                        makeBid("Auction:" + parts[1], Double.parseDouble(parts[2]));
+                    } else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
+                } else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
                 break;
-            case "autobid": //arguments are auction,aggressiveness,maxBid (newBid=oldBid+minBid*aggressiveness)
-                if(parts.length==4) {
-                    if(parts[1].matches("\\d+") && parts[2].matches("[1-9]\\d*(\\.\\d+)?") && parts[3].matches("\\d+(\\.\\d+)?")){
-                        createAutoBid("Auction:" +parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
-                    }
-                    else gui.addText("Invalid autobid command. auctionID, aggressiveness and maxBid need to be of type number ");
-                } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid");
+            case "autobid": //arguments are auction,aggressiveness,maxBid, delay (newBid=oldBid+minBid*aggressiveness)
+                if (parts.length == 5) {
+                    if (parts[1].matches("\\d+") && parts[2].matches("[1-9]\\d*(\\.\\d+)?") && parts[3].matches("\\d+(\\.\\d+)?") && parts[4].matches("0(\\.\\d+)?")) {
+                        createAutoBid("Auction:" + parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), Double.parseDouble(parts[4]));
+                    } else
+                        gui.addText("Invalid autobid command. auctionID, aggressiveness, maxBid and delay need to be of type number ");
+                } else gui.addText("Invalid autobid command. Expecting: autobid auctionId aggressiveness maxBid delay");
+                break;
+            case "smartbid":
+                if (parts.length == 3) {
+                    if (parts[1].matches("\\d+") && parts[2].matches("[1-9]\\d*(\\.\\d+)?")) {
+                        createAutoBid("Auction:" + parts[1], 0, Double.parseDouble(parts[2]), 0);
+                    } else
+                        gui.addText("Invalid smartbid command. auctionID and maxBid need to be of type number ");
+                } else gui.addText("Invalid smartbid command. Expecting: smartbid auctionId maxBid");
                 break;
             case "list":
-                if(parts.length == 1)
+                if (parts.length == 1)
                     displayAllAuctions();
                 else gui.addText("list command should not have arguments");
             case "?":
-                gui.addText(" Commands available are: create, join, bid, autobid and list");
+                gui.addText(" Commands available are: create, join, bid, autobid, smartbid and list");
                 break;
             default:
                 gui.addText("Invalid command");
@@ -440,11 +488,20 @@ public class User extends Agent {
     private double getNewBid(Bid bid) {
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
         System.out.println(auctionInfo.getMinBid() + " | " + auctionInfo.getWinningPrice());
-        switch (this.auctionsList.get(bid.auctionId).getType()) {
+        switch (auctionInfo.getType()) {
             case "english":
-                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)
+                if (bid.smart) {
+                    bid.delay = min(0.9, (auctionInfo.getMovement() + 1) / 5.0);//makes sure that the maximum is 0.9
+                    bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
+                }
+                if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
+                    bid.delay = 0;//the prices are getting high, time to start bidding
+                    gui.addText("Prices are getting too high, going to bid now");
+                    if (bid.delayedBid != null) bid.delayedBid.stop(); //cancels the delayedBid
+                    bid.receivedDelay = true;
+                }
+                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() > bid.maxBid)
                     return -1;//auction is too expensive
-                    // else if ((auction.endTime-auction.startTime)/auction.startTime<bid.delay && bid.maxBid-lastBid>= bid.auction.minBid*bid.aggressiveness) return 0;//wait more before bidding
                 else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
                     return bid.maxBid;
                 else return bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice();
@@ -453,17 +510,22 @@ public class User extends Agent {
         }
     }
 
-    private void createAutoBid(String auctionId, double aggressiveness, double maxBid) {
-        Bid bid = new Bid(maxBid, aggressiveness, auctionId);
+    private void createAutoBid(String auctionId, double aggressiveness, double maxBid, double delay) {//delay is percentage, goes from 0 to 1
+        if (aggressiveness == 0) {
+            subscribeAuction(auctionId);
+            while (!auctionsList.get(auctionId).isUpdated()) {
+            }
+        }
+        Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
         bidsList.put(auctionId, bid);
-        makeBid(auctionId, getNewBid(bid),maxBid);
+        makeBid(auctionId, getNewBid(bid));
     }
 
-    private void displayAllAuctions(){
+    private void displayAllAuctions() {
         //Update auctions
         DFSearch();
         gui.addText("\n The available auctions are the following: \n");
-        auctionsList.forEach((k,v) -> {
+        auctionsList.forEach((k, v) -> {
             gui.addText("       //        " + k + "        //");
             gui.addText("   Base Price  -> " + v.getBasePrice() + "\n" +
                     "   Auction IP   -> " + v.getIp() + "\n" +
@@ -471,18 +533,55 @@ public class User extends Agent {
                     "   Winning Bid -> " + v.getWinningPrice() + "\n");
         });
     }
+
+    class DelayedBid extends WakerBehaviour {
+
+        private final String auctionId;
+        private Agent a;
+
+        public DelayedBid(Agent a, long timeout, String auctionId) {
+            super(a, timeout);
+            this.a = a;
+            this.auctionId = auctionId;
+        }
+
+        @Override
+        protected void onWake() {
+            super.onWake();
+            bidsList.get(auctionId).receivedDelay = true;
+            makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
+        }
+    }
 }
 
 class Bid {
     double maxBid;
     double aggressiveness;
-    //int delay;
+    double delay;
     String auctionId;
+    boolean smart;
+    boolean receivedDelay = false;
+    User.DelayedBid delayedBid;
 
     public Bid(double maxBid, double aggressiveness, String auctionId) {
         this.maxBid = maxBid;
-        this.aggressiveness = aggressiveness;
-        //this.delay = delay;
+        if (aggressiveness == 0) {
+            this.aggressiveness = 1;
+            this.smart = true;
+        } else this.aggressiveness = aggressiveness;
+        this.delay = 0;
+        this.auctionId = auctionId;
+    }
+
+    public Bid(double maxBid, double aggressiveness, String auctionId, double delay) {//to make smart, aggressiveness=0
+        this.maxBid = maxBid;
+        if (aggressiveness == 0) {
+            this.aggressiveness = 1;
+            this.smart = true;
+        } else this.aggressiveness = aggressiveness;
+        this.delay = delay;
         this.auctionId = auctionId;
     }
 }
+
+
