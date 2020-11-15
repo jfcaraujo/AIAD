@@ -516,6 +516,8 @@ public class User extends Agent {
     }
 
     private double getNewBid(Bid bid) {
+        if (money < bid.maxBid) bid.tempMaxBid = money;
+        else bid.tempMaxBid = bid.maxBid;
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
         System.out.println(auctionInfo.getMinBid() + " | " + auctionInfo.getWinningPrice());
         switch (auctionInfo.getType()) {
@@ -524,22 +526,22 @@ public class User extends Agent {
                     bid.delay = min(0.9, (auctionInfo.getMovement() + 1) / 5.0);//makes sure that the maximum is 0.9
                     bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
                 }
-                if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
+                if (bid.delay > 0 && bid.tempMaxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
                     bid.delay = 0;//the prices are getting high, time to start bidding
                     gui.addText("Prices are getting too high, going to bid now");
                     if (bid.delayedBid != null) bid.delayedBid.stop(); //cancels the delayedBid
                     bid.receivedDelay = true;
                 }
-                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() > bid.maxBid)
+                if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() > bid.tempMaxBid)
                     return -1;//auction is too expensive
-                else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
-                    return bid.maxBid;
+                else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.tempMaxBid && bid.tempMaxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
+                    return bid.tempMaxBid;
                 else return bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice();
             case "dutch":
                 if (bid.smart) {
                     bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
                 }
-                return bid.maxBid - (10 - bid.aggressiveness) * auctionInfo.getMinBid();
+                return min(bid.tempMaxBid, bid.aggressiveness * auctionInfo.getMinBid());
             default:
                 return -2;//auction type not found
         }
@@ -598,6 +600,7 @@ public class User extends Agent {
 
 class Bid {
     double maxBid;
+    double tempMaxBid;
     double aggressiveness;
     double delay;
     String auctionId;
@@ -607,6 +610,7 @@ class Bid {
 
     public Bid(double maxBid, double aggressiveness, String auctionId) {
         this.maxBid = maxBid;
+        this.tempMaxBid = maxBid;
         if (aggressiveness == 0) {
             this.aggressiveness = 1;
             this.smart = true;
@@ -617,6 +621,7 @@ class Bid {
 
     public Bid(double maxBid, double aggressiveness, String auctionId, double delay) {//to make smart, aggressiveness=0
         this.maxBid = maxBid;
+        this.tempMaxBid = maxBid;
         if (aggressiveness == 0) {
             this.aggressiveness = 1;
             this.smart = true;
