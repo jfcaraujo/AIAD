@@ -524,7 +524,7 @@ public class User extends Agent {
                 if (bid.smart) {
                     bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
                 }
-                return min(bid.tempMaxBid, bid.aggressiveness * auctionInfo.getMinBid());
+                return min(bid.tempMaxBid, (bid.aggressiveness + 1) * auctionInfo.getMinBid());
             default:
                 return -2;//auction type not found
         }
