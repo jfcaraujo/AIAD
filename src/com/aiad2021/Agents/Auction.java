@@ -27,7 +27,7 @@ public class Auction extends Agent {
     private int duration;
     protected String type;
     protected double basePrice;
-    private double minBid;
+    protected double minBid;
     private double winningPrice;
     private double secondBestBid;
     private int amountOfBids;
@@ -177,7 +177,7 @@ public class Auction extends Agent {
             }
 
 
-            this.auction.basePrice = this.auction.basePrice - 5.00;
+            this.auction.basePrice = this.auction.basePrice - this.auction.minBid;
 
             informAllDutch();
         }
