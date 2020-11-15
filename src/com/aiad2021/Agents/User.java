@@ -233,7 +233,6 @@ public class User extends Agent {
 
         protected void handleInform(ACLMessage inform) {//todo delete
             //todo idk
-            System.out.println("i am subscribe inform");
             System.out.println(inform);
         }
 

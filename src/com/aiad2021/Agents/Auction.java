@@ -119,7 +119,6 @@ public class Auction extends Agent {
         @Override
         protected void onWake() {
 
-            if(!currentWinnerId.equals(" ")){
             super.onWake();
             if(type.equals("sprice"))
                     winningPrice = secondBestBid;
@@ -132,7 +131,6 @@ public class Auction extends Agent {
             String price = String.valueOf(winningPrice);
             msg.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+price);
             send(msg);
-            }else System.out.println("There were no winners");
 
             informAll(currentWinnerId);
 
@@ -207,24 +205,6 @@ public class Auction extends Agent {
                     }
                     break;
 
-                case "fprice":
-
-                    reply.setPerformative(ACLMessage.INFORM);
-                    if(MadeOffer(request.getSender())){
-                        reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
-                        break;
-                    }
-                    if (bidValue >= minBid) {
-
-                        if(bidValue > winningPrice) {
-                            winningPrice = bidValue;
-                            currentWinnerId = request.getSender().getName().split("@")[0];
-                        }
-                        reply.setContent("Your offer was accepted");
-                    }
-                    else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
-                    break;
-
                 case "dutch":
 
                     if(currentWinnerId.equals(" ")){
@@ -252,6 +232,24 @@ public class Auction extends Agent {
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }else if(bidValue > secondBestBid){
                             secondBestBid = bidValue;
+                        }
+                        reply.setContent("Your offer was accepted");
+                    }
+                    else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
+                    break;
+
+                case "fprice":
+
+                    reply.setPerformative(ACLMessage.INFORM);
+                    if(MadeOffer(request.getSender())){
+                        reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
+                        break;
+                    }
+                    if (bidValue >= minBid) {
+
+                        if(bidValue > winningPrice) {
+                            winningPrice = bidValue;
+                            currentWinnerId = request.getSender().getName().split("@")[0];
                         }
                         reply.setContent("Your offer was accepted");
                     }
@@ -316,13 +314,8 @@ public class Auction extends Agent {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 System.out.println("winner name:" + currentWinnerId +"lol");
-                if(!currentWinnerId.equals(" ")) {
-                    System.out.println("Here i am");
-                    message.setContent(winningPrice + " " + currentWinnerId);
-                }
-                else message.setContent("There were no bids for this auction");
+                message.setContent(winningPrice + " " + currentWinnerId);
 
-                System.out.println("lalala" + message.getContent());
                 this.send(message);
             }
         }
