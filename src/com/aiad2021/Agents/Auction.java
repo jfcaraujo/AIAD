@@ -23,6 +23,7 @@ public class Auction extends Agent {
 
     private int id;
 
+    private long startTime;
     private int duration;
     protected String type;
     protected double basePrice;
@@ -88,17 +89,19 @@ public class Auction extends Agent {
             sd.addProperties(new Property("basePrice", this.basePrice));
             sd.addProperties(new Property("minBid", this.minBid));
             sd.addProperties(new Property("winningPrice", this.winningPrice));
+            sd.addProperties(new Property("duration", this.duration));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
+        this.startTime = System.currentTimeMillis();
 
-        if(this.type.equals("dutch")){
-            addBehaviour(new DutchAuctionBehaviour(this,this,5*1000));
-        }else{
-            addBehaviour(new notifyWinner(this, (this.duration + 5) * 1000));
+        if (this.type.equals("dutch")) {
+            addBehaviour(new DutchAuctionBehaviour(this, this, 5 * 1000));
+        } else {
+            addBehaviour(new notifyWinner(this, (this.duration) * 1000));
         }
 
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
@@ -120,15 +123,15 @@ public class Auction extends Agent {
         protected void onWake() {
 
             super.onWake();
-            if(type.equals("sprice"))
-                    winningPrice = secondBestBid;
+            if (type.equals("sprice"))
+                winningPrice = secondBestBid;
 
-            System.out.println("Auction:" + this.a.getAID() + " ended");
+            System.out.println("Auction:" + this.a.getAID().getName() + " ended");
             System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
             String price = String.valueOf(winningPrice);
-            msg.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+price);
+            msg.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + price);
             send(msg);
 
             informAll(currentWinnerId);
@@ -147,12 +150,12 @@ public class Auction extends Agent {
 
     //Dutch Auction
 
-    class DutchAuctionBehaviour extends TickerBehaviour{
+    class DutchAuctionBehaviour extends TickerBehaviour {
 
         private Auction auction;
         private Agent a;
 
-        public DutchAuctionBehaviour(Agent a,Auction auction,  long period) {
+        public DutchAuctionBehaviour(Agent a, Auction auction, long period) {
             super(a, period);
             this.a = a;
             this.auction = auction;
@@ -189,8 +192,7 @@ public class Auction extends Agent {
             double bidValue = Double.parseDouble(request.getContent());
 
             ACLMessage reply = request.createReply();
-
-            switch(type){
+            switch (type) {
                 case "english":
 
                     if (bidValue >= winningPrice + minBid) {
@@ -219,8 +221,8 @@ public class Auction extends Agent {
                 case "sprice":
 
                     reply.setPerformative(ACLMessage.INFORM);
-                    if(MadeOffer(request.getSender())){
-                        reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
+                    if (MadeOffer(request.getSender())) {
+                        reply.setContent("You have already bid on this item. First price auctions only accept one bid per user");
                         break;
                     }
                     if (bidValue >= minBid) {
@@ -233,15 +235,14 @@ public class Auction extends Agent {
                             secondBestBid = bidValue;
                         }
                         reply.setContent("Your offer was accepted");
-                    }
-                    else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
+                    } else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
                     break;
 
                 case "fprice":
 
                     reply.setPerformative(ACLMessage.INFORM);
-                    if(MadeOffer(request.getSender())){
-                        reply.setContent("You have already bid on this item. First price bids only accept one bid per user");
+                    if (MadeOffer(request.getSender())) {
+                        reply.setContent("You have already bid on this item. Second price auctions only accept one bid per user");
                         break;
                     }
                     if (bidValue >= minBid) {
@@ -251,13 +252,12 @@ public class Auction extends Agent {
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
                         reply.setContent("Your offer was accepted");
-                    }
-                    else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
+                    } else reply.setPerformative(ACLMessage.REFUSE); //in case the offer is less than whats the min
                     break;
 
             }
 
-            displayNewOffer(request.getSender().getName().split("@")[0],bidValue, new ACLMessage(reply.getPerformative()));
+            displayNewOffer(request.getSender().getName().split("@")[0], bidValue, new ACLMessage(reply.getPerformative()));
 
             return reply;
         }
@@ -267,7 +267,9 @@ public class Auction extends Agent {
             ACLMessage result = request.createReply();
 
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent(winningPrice + " " + currentWinnerId);
+            if (type.equals("english"))
+                result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
+            else result.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
 
             informAll(request.getSender().getName());
 
@@ -290,16 +292,19 @@ public class Auction extends Agent {
             ACLMessage reply = request.createReply();
             reply.setPerformative(ACLMessage.AGREE);
             addParticipant(request.getSender());
+            if (type.equals("english"))
+                reply.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
+            else reply.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
             return reply;
         }
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
 
             ACLMessage result = request.createReply();
-
             result.setPerformative(ACLMessage.INFORM);
-            result.setContent(winningPrice + " " + currentWinnerId);
-
+            if (type.equals("english"))
+                result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
+            else result.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
             return result;
         }
 
@@ -314,8 +319,9 @@ public class Auction extends Agent {
                 message.addReceiver(participant);
                 if(currentWinnerId.equals(" ")){
                     message.setContent("Auction ended");
-                }else message.setContent(winningPrice + " " + currentWinnerId);
-
+                }else        if (type.equals("english"))
+                    message.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
+                else message.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
                 this.send(message);
             }
         }
@@ -325,7 +331,7 @@ public class Auction extends Agent {
 
     public void informAllDutch() {//for dutch auctions
 
-        if(currentWinnerId.equals("Dutch")){
+        if (currentWinnerId.equals("Dutch")) {
             for (AID participant : this.participants) {
                 System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
@@ -339,7 +345,7 @@ public class Auction extends Agent {
                 e.printStackTrace();
             }
             this.doDelete();
-        }else{
+        } else {
             for (AID participant : this.participants) {
                 System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
@@ -375,34 +381,34 @@ public class Auction extends Agent {
             }
         }
 
-        if (!found){
+        if (!found) {
             this.madeOffer.add(aid);
         }
         return found;
     }
 
-    public void displayInformationGUI(){
+    public void displayInformationGUI() {
         auctionGUI.addText("                                                    Auction " + this.id + "\n\n\n\n" +
                 "       Type            ->    " + this.type + "\n" +
-                "       Base Price   ->    " + this.basePrice +"\n" +
-                "       Min Bid         ->    " + this.minBid + "\n\n" );
+                "       Base Price   ->    " + this.basePrice + "\n" +
+                "       Min Bid         ->    " + this.minBid + "\n\n");
 
     }
 
-    public void displayNewOffer(String bidder , double offer , ACLMessage response){
+    public void displayNewOffer(String bidder, double offer, ACLMessage response) {
         switch (this.type) {
             case "sprice":
                 auctionGUI.addText("                                         New Offer from" + bidder + "\n\n" +
                         "       Offer By Bidder        ->    " + offer + "\n" +
                         "       Winner Price            ->    " + this.winningPrice + "\n" +
-                        "       Second Best Offer   ->    " + this.secondBestBid + "\n"+
-                        "       Response                ->    " + response.toString() + "\n\n" );
+                        "       Second Best Offer   ->    " + this.secondBestBid + "\n" +
+                        "       Response                ->    " + response.toString() + "\n\n");
                 break;
             default:
                 auctionGUI.addText("                                         New Offer from" + bidder + "\n\n" +
                         "       Offer By Bidder     ->    " + offer + "\n" +
-                        "       Winner Price         ->    " + this.winningPrice + "\n"+
-                        "       Response            ->    " + response.toString() + "\n\n" );
+                        "       Winner Price         ->    " + this.winningPrice + "\n" +
+                        "       Response            ->    " + response.toString() + "\n\n");
                 break;
         }
     }
