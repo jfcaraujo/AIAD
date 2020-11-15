@@ -511,10 +511,13 @@ public class User extends Agent {
     }
 
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid, double delay) {//delay is percentage, goes from 0 to 1
-        if (aggressiveness == 0) {
+        if (aggressiveness == 0) {//smartbid
             subscribeAuction(auctionId);
             while (!auctionsList.get(auctionId).isUpdated()) {
             }
+        } else if (!auctionsList.get(auctionId).getType().equals("english")) {
+            gui.addText("autobid is only valid for auctions of type english");
+            return;
         }
         Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
         bidsList.put(auctionId, bid);
