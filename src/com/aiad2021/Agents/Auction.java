@@ -1,5 +1,6 @@
 package com.aiad2021.Agents;
 
+import com.aiad2021.view.AuctionGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
@@ -14,10 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 
-import java.awt.desktop.SystemEventListener;
 import java.util.ArrayList;
-
-import com.aiad2021.view.AuctionGUI;
 
 public class Auction extends Agent {
 
@@ -51,13 +49,12 @@ public class Auction extends Agent {
         this.id = (int) args[0];
         this.type = (String) args[1];
         this.duration = (int) args[2];
-        this.basePrice = (double) args[3]; //todo change
+        this.basePrice = (double) args[3];
         this.minBid = (double) args[4];
         this.winningPrice = this.basePrice - this.minBid;
         this.secondBestBid = this.basePrice - this.minBid;
         this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
-        //this.owner = (User) args[5];
 
         this.currentWinnerId = " ";
         this.amountOfBids = 0;
@@ -65,12 +62,6 @@ public class Auction extends Agent {
         this.madeOffer = new ArrayList<>();
 
         displayInformationGUI();
-
-        System.out.println("My local name is " + getAID().getLocalName());
-        System.out.println("My GUID is " + getAID().getName());
-        System.out.println("My addresses are " + String.join(",", getAID().getAddressesArray()));
-
-        System.out.println("Id: " + this.id + "\n");
 
         //yellow pages setup
         this.serviceName = "Auction:" + this.id;
@@ -128,9 +119,9 @@ public class Auction extends Agent {
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
             if (currentWinnerId.equals(" "))
-                System.out.println("Without winners!");
+                System.out.println("There was no winner!");
             else {
-                System.out.println("    Winner was " + currentWinnerId + " and the price: " + winningPrice + "€");
+                System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice + "€");
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
                 msg.addReceiver(new AID(currentWinnerId, false));
                 String price = String.valueOf(winningPrice);
@@ -305,7 +296,6 @@ public class Auction extends Agent {
     public void informAll(String aidName, boolean ended) {//argument is person to be excluded of inform all
 
         for (AID participant : this.participants) {
-            System.out.println("-------participant--------" + participant.getName());
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
@@ -329,7 +319,6 @@ public class Auction extends Agent {
 
         if (!currentWinnerId.equals(" ")) {
             for (AID participant : this.participants) {
-                System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 message.setContent("Ended");
@@ -345,7 +334,6 @@ public class Auction extends Agent {
             this.doDelete();
         } else {
             for (AID participant : this.participants) {
-                System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 message.setContent(basePrice + " " + participants.size());

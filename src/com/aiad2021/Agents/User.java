@@ -228,10 +228,9 @@ public class User extends Agent {
                 gui.addText("INFORM: " + auctionId + " - I am winning !");
         }
 
-        protected void handleFailure(ACLMessage failure) {//todo
-            //repeat 3 times and stop with same value
-            //makeBid(auctionId,bidValue);
+        protected void handleFailure(ACLMessage failure) {
             gui.addText("FAILURE: " + auctionId);
+            System.out.println(failure);
         }
     }
 
@@ -259,15 +258,8 @@ public class User extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
-            System.out.println(agree);
             gui.addText("Joined " + agree.getSender().getName().split("@")[0] + ", you will now receive notifications!");
         }
-
-        /*protected void handleRefuse(ACLMessage refuse) {
-            auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
-            makeBid(auctionId,0);
-            System.out.println(refuse);
-        }*/
 
         protected void handleInform(ACLMessage inform) {
             String[] parts = inform.getContent().split(" ");
@@ -277,12 +269,9 @@ public class User extends Agent {
                 auctionInfo.setMovement(Integer.parseInt(parts[3]));
             else auctionInfo.setMovement(Integer.parseInt(parts[1]));
             auctionInfo.setUpdated();
-            System.out.println("i am subscribe inform");
-            System.out.println(inform);
         }
 
         protected void handleFailure(ACLMessage failure) {
-            //makeBid(auctionId); //todo try without updating teh bid
             System.out.println(failure);
         }
 
@@ -293,7 +282,6 @@ public class User extends Agent {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription templateSd = new ServiceDescription();
         templateSd.setType("auction-listing");
-        // templateSd.addProperties(new Property("country", "Italy")); //todover quando
         // se colocar os tipos de leiloes
         template.addServices(templateSd);
 
@@ -304,7 +292,6 @@ public class User extends Agent {
         addBehaviour(new SubscriptionInitiator(this,
                 DFService.createSubscriptionMessage(this, getDefaultDF(), template, sc)) {
             protected void handleInform(ACLMessage inform) {
-                //System.out.println("Agent " + getLocalName() + ": Notification received from DF");
                 try {
                     DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
                     if (results.length > 0) {
@@ -459,9 +446,7 @@ public class User extends Agent {
 
     // handles input from user
     public void handleMessage(String message) {
-        System.out.println(message);
         String[] parts = message.split(" ");
-        //todo avoid bad messages
         switch (parts[0]) {
             case "create":
                 if (parts.length == 6) {
@@ -482,7 +467,6 @@ public class User extends Agent {
             case "bid":
                 if (parts.length == 3) {
                     if (parts[1].matches("\\d+") && parts[2].matches("\\d+(\\.\\d+)?")) {
-                        System.out.println(parts[2].length());
                         makeBid("Auction:" + parts[1], Double.parseDouble(parts[2]));
                     } else gui.addText("Invalid auction ID or/and bidValue.These parameters need to be a number");
                 } else gui.addText("Invalid bid command. Expected: bid auctionID bidValue");
@@ -519,7 +503,6 @@ public class User extends Agent {
         if (money < bid.maxBid) bid.tempMaxBid = money;
         else bid.tempMaxBid = bid.maxBid;
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
-        System.out.println(auctionInfo.getMinBid() + " | " + auctionInfo.getWinningPrice());
         switch (auctionInfo.getType()) {
             case "english":
                 if (bid.smart) {
@@ -550,7 +533,7 @@ public class User extends Agent {
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid, double delay) {//delay is percentage, goes from 0 to 1
         if (aggressiveness == 0) {//smartbid
             if (!auctionsList.get(auctionId).getType().equals("english") && !auctionsList.get(auctionId).getType().equals("dutch")) {
-                gui.addText("smartbid is only valid for auctions of type english and dutch");
+                gui.addText("smartbid is only valid for auctions of type english or dutch");
                 return;
             }
             subscribeAuction(auctionId);

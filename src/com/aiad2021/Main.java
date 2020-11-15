@@ -2,10 +2,8 @@ package com.aiad2021;
 
 import jade.core.Profile;
 import jade.core.ProfileImpl;
-import jade.wrapper.ContainerController;
 import jade.core.Runtime;
-
-import java.util.Scanner;
+import jade.wrapper.ContainerController;
 
 public class Main {
 
@@ -19,7 +17,7 @@ public class Main {
         ContainerController cc = rt.createMainContainer(profile);
         //Load agents and products from world file
 
-        World w = new World(rt,profile,cc,"world.csv","products.csv");
+        World w = new World(rt,profile,cc,"world.csv");
 
     }
 }
