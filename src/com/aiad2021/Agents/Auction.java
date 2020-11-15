@@ -127,7 +127,6 @@ public class Auction extends Agent {
             System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
-            //msg.setContent("You won " + this.getAgent().getName().split("@")[0] + "ahahaha!");
             String price = String.valueOf(winningPrice);
             msg.setContent("Won " + this.getAgent().getName().split("@")[0]+"! "+price);
             send(msg);
@@ -174,7 +173,7 @@ public class Auction extends Agent {
 
             this.auction.basePrice = this.auction.basePrice - 5.00;
 
-            informAll();
+            informAllDutch();
         }
     }
 
@@ -313,8 +312,9 @@ public class Auction extends Agent {
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                System.out.println("winner name:" + currentWinnerId +"lol");
-                message.setContent(winningPrice + " " + currentWinnerId);
+                if(currentWinnerId.equals(" ")){
+                    message.setContent("Auction ended");
+                }else message.setContent(winningPrice + " " + currentWinnerId);
 
                 this.send(message);
             }
@@ -323,7 +323,7 @@ public class Auction extends Agent {
 
     }
 
-    public void informAll() {//for dutch auctions
+    public void informAllDutch() {//for dutch auctions
 
         if(currentWinnerId.equals("Dutch")){
             for (AID participant : this.participants) {

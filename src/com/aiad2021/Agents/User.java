@@ -71,35 +71,37 @@ public class User extends Agent {
             if (msg != null) {
                 String[] parts = msg.getContent().split(" ");
                 String auctionID = msg.getSender().getName().split("@")[0];
-                if (parts.length == 3) {//if regular inform
-                    System.out.println("INFORM WAS " + msg);
-                    if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
-                        auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
-                        gui.addText("I'm starting to lose");
-                        makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
-                    } else if (parts[0].equals("Won")) {//if end of auction
-                        String winMsg = "You "+ parts[0]+parts[1] + " for "+parts[2]+"€";
-                        gui.addText(winMsg);
-                        //update money
-                        money = money - Double.parseDouble(parts[2]);
-                    } else{
-                        System.out.println("i received a message of " + msg.getContent());
-                        if(!parts[0].equals("There")) {
+
+                switch(parts.length) {
+                    case 1:
+                        if (parts[0].equals("Ended"))
+                            gui.addText("Dutch " + auctionID + " ended ");
+                        else
+                            gui.addText("Dutch " + auctionID + " price decreased to " + parts[0] + " €");
+                        break;
+                    case 2:
+                        System.out.println("INFORM WAS " + msg);
+                        if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
                             auctionsList.get(auctionID).setWinningPrice(Double.parseDouble(parts[0]));
-                            gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
-                        }else {
-                            gui.addText(auctionID + " ended. " + msg.getContent());
+                            gui.addText("I'm starting to lose");
+                            makeBid(auctionID, getNewBid(bidsList.get(auctionID)), bidsList.get(auctionID).maxBid);
                         }
+                        else if(parts[0].equals("Auction")){
+                            gui.addText( msg.getContent() + ". There was no winner on Auction" + auctionID);
+                        }else {
+                            gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
+                        }
+                        break;
+                    case 3:
+                        if (parts[0].equals("Won")) {//if end of auction
+                            String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
+                            gui.addText(winMsg);
+                            //update money
+                            money = money - Double.parseDouble(parts[2]);
+                        }
+                        break;
                     }
-                }else if(parts.length == 1){
-                    if(parts[0].equals("Ended"))
-                        gui.addText( "Dutch " + auctionID + " ended ");
-                    else
-                        gui.addText( "Dutch " + auctionID + " price decreased to " + parts[0] +" €");
-                }
-            } else {
-                block();
-            }
+                }else block();
         }
     }
 
