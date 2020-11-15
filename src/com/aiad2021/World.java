@@ -1,14 +1,13 @@
 package com.aiad2021;
 
-import jade.core.Agent;
 import jade.core.Profile;
-import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -22,11 +21,10 @@ public class World {
     private ArrayList<AgentController> auctionAgentControllers;
     //file strings
     private String worldFilename;
-    private String productsFilename;
 
     public World(){}
 
-    public World(Runtime rt,Profile profile,ContainerController cc, String worldFilename,String productsFilename ) {
+    public World(Runtime rt, Profile profile, ContainerController cc, String worldFilename) {
 
         //Jade components
         this.runtime = rt;
@@ -37,7 +35,6 @@ public class World {
         this.mainContainer = cc;
         //Files
         this.worldFilename = worldFilename;
-        this.productsFilename = productsFilename;
 
         //Loading
         this.Load(); //Throws exception if fails
@@ -63,7 +60,7 @@ public class World {
     }
 
     //create agents
-    private void createAuctionAgent(int id, String type, int duration, double basePrice, double minBid) throws StaleProxyException { //todo add args
+    private void createAuctionAgent(int id, String type, int duration, double basePrice, double minBid) throws StaleProxyException {
         //params to be passed on the agent creation
         Object[] params = {id,type,duration,basePrice,minBid};
         //Agent path on jade = com.aiad2021.Agents.
