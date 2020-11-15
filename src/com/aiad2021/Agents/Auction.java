@@ -173,6 +173,7 @@ public class Auction extends Agent {
                 } catch (FIPAException e) {
                     e.printStackTrace();
                 }
+                auctionGUI.setVisible(false);
                 this.a.doDelete();
             }
 
@@ -326,7 +327,7 @@ public class Auction extends Agent {
 
     public void informAllDutch() {//for dutch auctions
 
-        if (currentWinnerId.equals("Dutch")) {
+        if (!currentWinnerId.equals(" ")) {
             for (AID participant : this.participants) {
                 System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
@@ -336,9 +337,11 @@ public class Auction extends Agent {
             }
             try {
                 DFService.deregister(this);
+
             } catch (FIPAException e) {
                 e.printStackTrace();
             }
+            this.auctionGUI.setVisible(false);
             this.doDelete();
         } else {
             for (AID participant : this.participants) {
