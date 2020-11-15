@@ -88,8 +88,16 @@ public class User extends Agent {
                         break;
                     case 3://if regular inform
                         if (parts[0].equals("Won")) { //if won
-                            String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
+                            String winMsg = "You won " + parts[1] + " for " + parts[2] + "€";
                             gui.addText(winMsg);
+                            if (auctionInfo.getType().equals("dutch")) money = money - Double.parseDouble(parts[2]);
+                        } else if (parts[0].equals("Lost")) { //if lost
+                            String str = "You lost" + auctionID + ", winning bid was" + parts[2] + "€";
+                            if (!auctionInfo.getType().equals("english")) {
+                                money = money + auctionInfo.getCurrentBid();
+                                auctionInfo.setCurrentBid(0);
+                            }
+                            gui.addText(str);
                         } else if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) {//if autobid or smartbid
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             auctionInfo.setMovement(Integer.parseInt(parts[2]));
@@ -161,8 +169,10 @@ public class User extends Agent {
             gui.addText("Waiting until price drops to " + bidValue);
             return;
         }
-        money = money - bidValue;
-        auctionInfo.setCurrentBid(bidValue);
+        if (!auctionInfo.getType().equals("dutch")) {
+            money = money - bidValue;
+            auctionInfo.setCurrentBid(bidValue);
+        }
         addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
 
     }
@@ -428,10 +438,10 @@ public class User extends Agent {
                     }
                 }
 
-               Set<String> toDelete = new HashSet<>();
+                Set<String> toDelete = new HashSet<>();
 
-                for(String key : auctionsList.keySet()){
-                    if(!currentIDs.contains(key)){
+                for (String key : auctionsList.keySet()) {
+                    if (!currentIDs.contains(key)) {
                         toDelete.add(key);
                     }
 

@@ -129,16 +129,16 @@ public class Auction extends Agent {
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
             if (currentWinnerId.equals(" "))
                 System.out.println("Without winners!");
-            else
+            else {
                 System.out.println("    Winner was " + currentWinnerId + " and the price: " + winningPrice + "€");
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
-            msg.addReceiver(new AID(currentWinnerId, false));
-            String price = String.valueOf(winningPrice);
-            msg.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + price);
-            send(msg);
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
+                msg.addReceiver(new AID(currentWinnerId, false));
+                String price = String.valueOf(winningPrice);
+                msg.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + price);
+                send(msg);
+            }
 
-            informAll(currentWinnerId);
-
+            informAll(currentWinnerId, true);
             auctionGUI.setVisible(false);
 
             try {
@@ -262,7 +262,7 @@ public class Auction extends Agent {
                 result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
             else result.setContent("" + participants.size());
 
-            informAll(request.getSender().getName());
+            informAll(request.getSender().getName(), false);
 
             return result;
         }
@@ -301,18 +301,22 @@ public class Auction extends Agent {
 
     }
 
-    public void informAll(String aidName) {//argument is person to be excluded of inform all
+    public void informAll(String aidName, boolean ended) {//argument is person to be excluded of inform all
 
         for (AID participant : this.participants) {
             System.out.println("-------participant--------" + participant.getName());
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                if (currentWinnerId.equals(" ")) {
-                    message.setContent("Auction ended");
-                } else if (type.equals("english"))
-                    message.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-                else message.setContent("" + participants.size());
+                if (ended) {
+                    if (currentWinnerId.equals(" ")) {
+                        message.setContent("Auction ended without a winner");
+                    } else message.setContent("Lost " + currentWinnerId + winningPrice);
+                } else {
+                    if (type.equals("english"))
+                        message.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
+                    else message.setContent("" + participants.size());
+                }
                 this.send(message);
             }
         }
