@@ -5,6 +5,7 @@ import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -127,10 +128,14 @@ public class User extends Agent {
         else if (bidValue == 0) { //create new bid value
             bidValue = getNewBid(b);
         }
-        System.out.println("BID INFO IS"+b.receivedDelay+b.delay);
         AuctionInfo auctionInfo = auctionsList.get(auctionId);
-        if (b.delay >0 && !b.receivedDelay)
+        if (b.delay > 0 && !b.receivedDelay) {
             gui.addText("AutoBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
+            double delay = auctionInfo.getDelay(b.delay);
+            addBehaviour(new delayedBid(this, (long) delay,auctionId));
+            gui.addText("Time remaining: " + delay/1000.0 + " seconds");
+            return ;
+        }
         switch ((int) bidValue) {
             case -1:
                 gui.addText("MakeBid - Auction is too expensive!");
@@ -157,21 +162,12 @@ public class User extends Agent {
         private String auctionId;
         private AuctionInfo auctionInfo;
         private String msgContent;
-        private boolean delay;
 
         public FIPARequestBid(Agent a, ACLMessage msg, String auctionId, AuctionInfo auctionInfo, Double bidValue, Double delay) {
             super(a, msg);
             this.auctionId = auctionId;
             this.auctionInfo = auctionInfo;
-            if (delay == 0) {
-                this.msgContent = String.valueOf(bidValue);
-                this.delay = false;
-            } else {
-                this.msgContent = bidValue + " " + delay;
-                bidsList.get(auctionId).receivedDelay = false;
-                this.delay = true;
-            }
-            ;
+            this.msgContent = String.valueOf(bidValue);
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
@@ -185,9 +181,6 @@ public class User extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
-            if (bidsList.get(auctionId) != null) {//if autobid
-                bidsList.get(auctionId).receivedDelay = true;
-            }
             gui.addText("AGREE: " + auctionId);
         }
 
@@ -196,7 +189,6 @@ public class User extends Agent {
             //make new bid with a higher value
             auctionsList.get(auctionId).setWinningPrice(Double.parseDouble(refuse.getContent()));
             if (bidsList.get(auctionId) != null) {//if autobid
-                bidsList.get(auctionId).receivedDelay = true;
                 makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
             } else
                 makeBid(auctionId, 0);
@@ -302,6 +294,8 @@ public class User extends Agent {
                                 double basePrice = 0.0;
                                 double minBid = 0.0;
                                 double currentPrice = 0.0;
+                                double duration = 0;
+                                double start = System.currentTimeMillis();
                                 it = sd.getAllProperties();
                                 while (it.hasNext()) {
                                     Property p = (Property) it.next();
@@ -318,11 +312,16 @@ public class User extends Agent {
                                         case 3:
                                             currentPrice = Double.parseDouble((String) p.getValue());
                                             break;
+                                        case 4:
+                                            duration = Double.parseDouble((String) p.getValue());
+                                            break;
                                     }
                                     i++;
                                 }
-                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
-                                auctionsList.put(sd.getName(), ai);
+                                AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, duration, start, provider.getName());
+                                if (!auctionsList.containsKey(sd.getName()))
+                                    auctionsList.put(sd.getName(), ai);
+                                else auctionsList.get(sd.getName()).setWinningPrice(currentPrice);
                             }
                         }
                     }
@@ -367,6 +366,8 @@ public class User extends Agent {
                         double basePrice = 0.0;
                         double minBid = 0.0;
                         double currentPrice = 0.0;
+                        double duration = 0;
+                        double start = System.currentTimeMillis();
                         it = sd.getAllProperties();
                         while (it.hasNext()) {
                             Property p = (Property) it.next();
@@ -383,11 +384,17 @@ public class User extends Agent {
                                 case 3:
                                     currentPrice = Double.parseDouble((String) p.getValue());
                                     break;
+                                case 4:
+                                    duration = Double.parseDouble((String) p.getValue());
+                                    break;
                             }
                             i++;
                         }
-                        AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, provider.getName());
-                        auctionsList.put(sd.getName(), ai);
+                        AuctionInfo ai = new AuctionInfo(type, basePrice, minBid, currentPrice, duration, start, provider.getName());
+                        if (!auctionsList.containsKey(sd.getName()))
+                            auctionsList.put(sd.getName(), ai);
+                        else auctionsList.get(sd.getName()).setWinningPrice(currentPrice);
+
                     }
                 }
             } else {
@@ -465,8 +472,8 @@ public class User extends Agent {
                     bid.delay = min(0.95, (auctionInfo.getMovement() - 1) / 10.0);
                     bid.aggressiveness = max(1.0, auctionInfo.getMovement());
                 }
-                if (bid.delay > 0 && !bid.receivedDelay && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness)
-                    bid.delay= 0;//the prices are getting high, time to start bidding
+                if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness)
+                    bid.delay = 0;//the prices are getting high, time to start bidding //todo change behaviour
                 if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() >= bid.maxBid)
                     return -1;//auction is too expensive
                 else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
@@ -495,15 +502,34 @@ public class User extends Agent {
                     "   Winning Bid -> " + v.getWinningPrice() + "\n");
         });
     }
+
+    class delayedBid extends WakerBehaviour {
+
+        private final String auctionId;
+        private Agent a;
+
+        public delayedBid(Agent a, long timeout, String auctionId) {
+            super(a, timeout);
+            this.a = a;
+            this.auctionId = auctionId;
+        }
+
+        @Override
+        protected void onWake() {
+            super.onWake();
+            bidsList.get(auctionId).receivedDelay=true;
+            makeBid(auctionId, getNewBid(bidsList.get(auctionId)));
+        }
+    }
 }
 
 class Bid {
     double maxBid;
     double aggressiveness;
     double delay;
-    boolean receivedDelay = false;
     String auctionId;
     boolean smart;
+    boolean receivedDelay=false;
 
     public Bid(double maxBid, double aggressiveness, String auctionId) {
         this.maxBid = maxBid;

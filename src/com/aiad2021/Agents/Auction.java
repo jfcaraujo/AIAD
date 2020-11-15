@@ -89,6 +89,7 @@ public class Auction extends Agent {
             sd.addProperties(new Property("basePrice", this.basePrice));
             sd.addProperties(new Property("minBid", this.minBid));
             sd.addProperties(new Property("winningPrice", this.winningPrice));
+            sd.addProperties(new Property("duration", this.duration));
             dfd.addServices(sd);
 
             DFService.register(this, dfd);
@@ -177,13 +178,9 @@ public class Auction extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) {
             addParticipant(request.getSender());
-            String[] parts = request.getContent().split(" ");
-            double bidValue = Double.parseDouble(parts[0]);
+            double bidValue = Double.parseDouble(request.getContent());
 
             ACLMessage reply = request.createReply();
-            if(parts.length == 2) {
-                    getTimeToDelay(Double.parseDouble(parts[1]));
-            }
             switch (type) {
                 case "english":
 
@@ -385,9 +382,5 @@ public class Auction extends Agent {
                         "       Response            ->    " + response.toString() + "\n\n");
                 break;
         }
-    }
-
-    private double getTimeToDelay(double delay) {
-        return this.startTime-System.currentTimeMillis()+this.duration*1000.0*delay;
     }
 }
