@@ -84,14 +84,14 @@ public class User extends Agent {
                         break;
                     case 3://if regular inform
                         AuctionInfo auctionInfo = auctionsList.get(auctionID);
-                        if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
+                         if (parts[0].equals("Won")){ //if in autobid
+                            String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
+                            gui.addText(winMsg);
+                        } else if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) {//if end of auction
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             auctionInfo.setMovement(Integer.parseInt(parts[2]));
                             gui.addText("I'm starting to lose");
                             makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
-                        } else if (parts[0].equals("Won")) {//if end of auction
-                            String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
-                            gui.addText(winMsg);
                         } else {//update winner of auction
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             double currentBid = auctionInfo.getCurrentBid();

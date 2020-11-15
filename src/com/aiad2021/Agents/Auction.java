@@ -127,7 +127,10 @@ public class Auction extends Agent {
                 winningPrice = secondBestBid;
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
-            System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice);
+            if(currentWinnerId.equals(" "))
+                System.out.println("Without winners!");
+            else
+                System.out.println("    Winner was " + currentWinnerId + " and the price: " + winningPrice+"€");
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
             msg.addReceiver(new AID(currentWinnerId, false));
             String price = String.valueOf(winningPrice);
