@@ -75,24 +75,28 @@ public class User extends Agent {
             if (msg != null) {
                 String[] parts = msg.getContent().split(" ");
                 String auctionID = msg.getSender().getName().split("@")[0];
+                AuctionInfo auctionInfo = auctionsList.get(auctionID);
                 switch (parts.length) {
                     case 1:
                         if (parts[0].equals("Ended"))
                             gui.addText("Dutch " + auctionID + " ended ");
-                        else
-                            gui.addText("Dutch " + auctionID + " price decreased to " + parts[0] + " €");
+                        break;
+                    case 2:
+                        gui.addText("Dutch " + auctionID + " price decreased to " + parts[0] + " €");
+                        auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+                        auctionInfo.setMovement(Integer.parseInt(parts[1]));
+                        if (bidsList.containsKey(auctionID)) makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                         break;
                     case 3://if regular inform
-                        AuctionInfo auctionInfo = auctionsList.get(auctionID);
-                         if (parts[0].equals("Won")){ //if in autobid
+                        if (parts[0].equals("Won")) { //if won
                             String winMsg = "You " + parts[0] + parts[1] + " for " + parts[2] + "€";
                             gui.addText(winMsg);
-                        } else if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) {//if end of auction
+                        } else if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) {//if autobid or smartbid
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             auctionInfo.setMovement(Integer.parseInt(parts[2]));
                             gui.addText("I'm starting to lose");
                             makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
-                        } else {//update winner of auction
+                        } else {//update current winner of auction
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             double currentBid = auctionInfo.getCurrentBid();
                             if (currentBid != 0)
@@ -153,6 +157,10 @@ public class User extends Agent {
                 return;
             default:
                 break;
+        }
+        if (b.smart && auctionInfo.getType().equals("dutch") && auctionInfo.getWinningPrice() > bidValue) {
+            gui.addText("Waiting until price drops to " + bidValue);
+            return;
         }
         money = money - bidValue;
         auctionInfo.setCurrentBid(bidValue);
@@ -243,11 +251,6 @@ public class User extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
             System.out.println(agree);
-            String[] parts = agree.getContent().split(" ");
-            AuctionInfo auctionInfo = auctionsList.get(auctionId);
-            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
-            auctionInfo.setMovement(Integer.parseInt(parts[3]));
-            auctionInfo.setUpdated();
             gui.addText("Joined " + agree.getSender().getName().split("@")[0] + ", you will now receive notifications!");
         }
 
@@ -261,7 +264,10 @@ public class User extends Agent {
             String[] parts = inform.getContent().split(" ");
             AuctionInfo auctionInfo = auctionsList.get(auctionId);
             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
-            auctionInfo.setMovement(Integer.parseInt(parts[3]));
+            if (auctionInfo.getType().equals("english"))
+                auctionInfo.setMovement(Integer.parseInt(parts[3]));
+            else auctionInfo.setMovement(Integer.parseInt(parts[1]));
+            auctionInfo.setUpdated();
             System.out.println("i am subscribe inform");
             System.out.println(inform);
         }
@@ -505,6 +511,11 @@ public class User extends Agent {
                 else if (bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice() > bid.maxBid && bid.maxBid >= auctionInfo.getMinBid() + auctionInfo.getWinningPrice())
                     return bid.maxBid;
                 else return bid.aggressiveness * auctionInfo.getMinBid() + auctionInfo.getWinningPrice();
+            case "dutch":
+                if (bid.smart) {
+                    bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
+                }
+                return bid.maxBid - (10 - bid.aggressiveness) * auctionInfo.getMinBid();
             default:
                 return -2;//auction type not found
         }
@@ -512,6 +523,10 @@ public class User extends Agent {
 
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid, double delay) {//delay is percentage, goes from 0 to 1
         if (aggressiveness == 0) {//smartbid
+            if (!auctionsList.get(auctionId).getType().equals("english") && !auctionsList.get(auctionId).getType().equals("dutch")) {
+                gui.addText("smartbid is only valid for auctions of type english and dutch");
+                return;
+            }
             subscribeAuction(auctionId);
             while (!auctionsList.get(auctionId).isUpdated()) {
             }

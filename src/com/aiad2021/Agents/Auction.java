@@ -260,7 +260,7 @@ public class Auction extends Agent {
             result.setPerformative(ACLMessage.INFORM);
             if (type.equals("english"))
                 result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else result.setContent(winningPrice + " " + currentWinnerId + " " + participants.size());
+            else result.setContent("" + participants.size());
 
             informAll(request.getSender().getName());
 
@@ -285,7 +285,7 @@ public class Auction extends Agent {
             addParticipant(request.getSender());
             if (type.equals("english"))
                 reply.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else reply.setContent("" + participants.size());
+            else reply.setContent(basePrice + " " + participants.size());
             return reply;
         }
 
@@ -295,7 +295,7 @@ public class Auction extends Agent {
             result.setPerformative(ACLMessage.INFORM);
             if (type.equals("english"))
                 result.setContent(winningPrice + " " + currentWinnerId + " " + amountOfBids);
-            else result.setContent("" + participants.size());
+            else result.setContent(basePrice + " " + participants.size());
             return result;
         }
 
@@ -341,7 +341,7 @@ public class Auction extends Agent {
                 System.out.println("-------participant--------" + participant.getName());
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
-                message.setContent(String.valueOf(basePrice));
+                message.setContent(basePrice + " " + participants.size());
                 this.send(message);
             }
         }
