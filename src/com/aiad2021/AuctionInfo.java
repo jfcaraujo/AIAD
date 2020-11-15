@@ -12,6 +12,8 @@ public class AuctionInfo {
     private final double minBid;
     private double currentBid;
     private int movement;
+    boolean updated=false;
+
 
     public AuctionInfo(String type, double basePrice, double minBid, double winningPrice, double duration, double start, String ip) {
         this.type = type;
@@ -65,15 +67,15 @@ public class AuctionInfo {
         this.movement = movement;
     }
 
-    public double getDuration() {
-        return duration;
-    }
-
-    public double getStart() {
-        return start;
-    }
-
     public double getDelay(double delay){
         return start+delay*duration*1000-System.currentTimeMillis();
+    }
+
+    public boolean isUpdated() {
+        return updated;
+    }
+
+    public void setUpdated() {
+        this.updated = true;
     }
 }

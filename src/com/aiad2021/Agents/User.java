@@ -135,7 +135,7 @@ public class User extends Agent {
             } else {
                 gui.addText("AutoBid - Going to wait until the auction time is over " + b.delay * 100 + "% to bid");
             }
-            double delay = auctionInfo.getDelay(b.delay);
+            double delay = max(0,auctionInfo.getDelay(b.delay));
             if (b.delayedBid != null) b.delayedBid.stop();//if a smart bid waiting for delay receives new inform
             b.delayedBid = new DelayedBid(this, (long) delay, auctionId);
             addBehaviour(b.delayedBid);
@@ -242,6 +242,11 @@ public class User extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
             System.out.println(agree);
+            String[] parts = agree.getContent().split(" ");
+            AuctionInfo auctionInfo = auctionsList.get(auctionId);
+            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+            auctionInfo.setMovement(Integer.parseInt(parts[3]));
+            auctionInfo.setUpdated();
             gui.addText("Joined " + agree.getSender().getName().split("@")[0] + ", you will now receive notifications!");
         }
 
@@ -251,8 +256,11 @@ public class User extends Agent {
             System.out.println(refuse);
         }*/
 
-        protected void handleInform(ACLMessage inform) {//todo delete
-            //todo idk
+        protected void handleInform(ACLMessage inform) {
+            String[] parts = inform.getContent().split(" ");
+            AuctionInfo auctionInfo = auctionsList.get(auctionId);
+            auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
+            auctionInfo.setMovement(Integer.parseInt(parts[3]));
             System.out.println("i am subscribe inform");
             System.out.println(inform);
         }
@@ -476,7 +484,7 @@ public class User extends Agent {
         switch (auctionInfo.getType()) {
             case "english":
                 if (bid.smart) {
-                    bid.delay = min(0.9, (auctionInfo.getMovement()) / 5.0);//makes sure that the maximum is 0.9
+                    bid.delay = min(0.9, (auctionInfo.getMovement() + 1) / 5.0);//makes sure that the maximum is 0.9
                     bid.aggressiveness = max(1.0, auctionInfo.getMovement());//makes sure that the minimum is 1
                 }
                 if (bid.delay > 0 && bid.maxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
@@ -496,7 +504,10 @@ public class User extends Agent {
     }
 
     private void createAutoBid(String auctionId, double aggressiveness, double maxBid, double delay) {//delay is percentage, goes from 0 to 1
-        Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
+        if (aggressiveness == 0) {
+            subscribeAuction(auctionId);
+            while (!auctionsList.get(auctionId).isUpdated()){}
+        }Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
         bidsList.put(auctionId, bid);
         makeBid(auctionId, getNewBid(bid));
     }
