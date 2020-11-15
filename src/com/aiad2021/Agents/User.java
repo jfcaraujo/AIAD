@@ -86,7 +86,7 @@ public class User extends Agent {
                         AuctionInfo auctionInfo = auctionsList.get(auctionID);
                         if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) { //if in autobid
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
-                            auctionInfo.setMovement(Integer.parseInt(parts[3]));
+                            auctionInfo.setMovement(Integer.parseInt(parts[2]));
                             gui.addText("I'm starting to lose");
                             makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                         } else if (parts[0].equals("Won")) {//if end of auction
