@@ -9,14 +9,16 @@ public class AuctionInfo {
     private final String ip;
     private final double minBid;
     private double currentBid;
+    private int movement;
 
-    public AuctionInfo(String type, double basePrice, double minBid, double winningPrice, String ip){
+    public AuctionInfo(String type, double basePrice, double minBid, double winningPrice, String ip) {
         this.type = type;
         this.basePrice = basePrice;
         this.minBid = minBid;
         this.winningPrice = winningPrice;
         this.ip = ip;
-        this.currentBid=0;
+        this.currentBid = 0;
+        this.movement = 0;
     }
 
     public String getType() {
@@ -27,7 +29,7 @@ public class AuctionInfo {
         return basePrice;
     }
 
-    public void setWinningPrice(double winningPrice){
+    public void setWinningPrice(double winningPrice) {
         this.winningPrice = winningPrice;
     }
 
@@ -49,5 +51,13 @@ public class AuctionInfo {
 
     public void setCurrentBid(double currentBid) {
         this.currentBid = currentBid;
+    }
+
+    public int getMovement() {
+        return movement;
+    }
+
+    public void setMovement(int movement) {
+        this.movement = movement;
     }
 }
