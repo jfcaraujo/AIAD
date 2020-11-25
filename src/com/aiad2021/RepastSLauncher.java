@@ -4,17 +4,13 @@ import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.ContainerController;
-import uchicago.src.sim.engine.SimInit;
+import sajas.sim.repast3.Repast3Launcher;
 
-import java.util.Locale;
+public class RepastSLauncher extends Repast3Launcher {
 
-public class Main {
+    @Override
+    protected void launchJADE() {
 
-    public static void main(String[] args){
-        Locale.setDefault(new Locale("en", "US"));
-        SimInit init = new SimInit();
-        init.loadModel(new RepastSLauncher(), null, false);
-/*
         //This will start JADE Gui
         Runtime rt = Runtime.instance();
         Profile profile = new ProfileImpl();
@@ -24,6 +20,15 @@ public class Main {
         //Load agents and products from world file
 
         World w = new World(rt,profile,cc,"world.csv");
-*/
+    }
+
+    @Override
+    public String[] getInitParam() {
+        return new String[0];
+    }
+
+    @Override
+    public String getName() {
+        return "Auction Model";
     }
 }
