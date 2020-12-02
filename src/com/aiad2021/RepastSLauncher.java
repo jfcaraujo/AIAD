@@ -7,19 +7,19 @@ import jade.wrapper.ContainerController;
 import sajas.sim.repast3.Repast3Launcher;
 
 public class RepastSLauncher extends Repast3Launcher {
-
+    private ContainerController mainContainer;
+    private Runtime rt;
+    private Profile profile;
     @Override
     protected void launchJADE() {
 
         //This will start JADE Gui
-        Runtime rt = Runtime.instance();
-        Profile profile = new ProfileImpl();
+        rt = Runtime.instance();
+        profile = new ProfileImpl();
         profile.setParameter(Profile.GUI, "true");
 
-        ContainerController cc = rt.createMainContainer(profile);
-        //Load agents and products from world file
-
-        World w = new World(rt,profile,cc,"world.csv");
+        mainContainer = rt.createMainContainer(profile);
+        
     }
 
     @Override
@@ -30,5 +30,21 @@ public class RepastSLauncher extends Repast3Launcher {
     @Override
     public String getName() {
         return "Auction Model";
+    }
+
+    @Override
+    public void setup() {
+        super.setup();  // crucial!
+
+        // property descriptors
+        // ...
+    }
+
+    @Override
+    public void begin() {
+        super.begin();  // crucial!
+        World w = new World(rt,profile,mainContainer,"world.csv");
+        // display surfaces, spaces, displays, plots, ...
+        // ...
     }
 }
