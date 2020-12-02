@@ -1,9 +1,9 @@
 package com.aiad2021;
 
 import jade.core.Profile;
-import jade.core.Runtime;
-import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
+import sajas.core.Runtime;
+import sajas.wrapper.AgentController;
+import sajas.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 
 import java.io.File;

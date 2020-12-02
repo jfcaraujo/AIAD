@@ -3,10 +3,10 @@ package com.aiad2021.Agents;
 import com.aiad2021.AuctionInfo;
 import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
-import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.WakerBehaviour;
-import jade.domain.DFService;
+import sajas.core.Agent;
+import sajas.core.behaviours.CyclicBehaviour;
+import sajas.core.behaviours.WakerBehaviour;
+import sajas.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
@@ -14,10 +14,10 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.AchieveREInitiator;
-import jade.proto.SubscriptionInitiator;
+import sajas.proto.AchieveREInitiator;
+import sajas.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
-import jade.wrapper.AgentController;
+import sajas.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
 import java.util.*;
@@ -197,8 +197,8 @@ public class User extends Agent {
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
-
-            msg.addReceiver(new AID(this.auctionId, false));
+            System.out.println(this.auctionId);
+            msg.addReceiver(new sajas.core.AID(this.auctionId, false));
             msg.setContent(this.msgContent);
 
             v.add(msg);
@@ -402,16 +402,16 @@ public class User extends Agent {
                                     type = (String) p.getValue();
                                     break;
                                 case 1:
-                                    basePrice = Double.parseDouble((String) p.getValue());
+                                    basePrice = Double.parseDouble(String.valueOf(p.getValue()));
                                     break;
                                 case 2:
-                                    minBid = Double.parseDouble((String) p.getValue());
+                                    minBid = Double.parseDouble(String.valueOf(p.getValue()));
                                     break;
                                 case 3:
-                                    currentPrice = Double.parseDouble((String) p.getValue());
+                                    currentPrice = Double.parseDouble(String.valueOf(p.getValue()));
                                     break;
                                 case 4:
-                                    duration = Double.parseDouble((String) p.getValue());
+                                    duration = Double.parseDouble(String.valueOf(p.getValue()));
                                     break;
                             }
                             i++;

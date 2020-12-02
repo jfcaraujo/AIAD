@@ -2,10 +2,10 @@ package com.aiad2021.Agents;
 
 import com.aiad2021.view.AuctionGUI;
 import jade.core.AID;
-import jade.core.Agent;
-import jade.core.behaviours.TickerBehaviour;
-import jade.core.behaviours.WakerBehaviour;
-import jade.domain.DFService;
+import sajas.core.Agent;
+import sajas.core.behaviours.TickerBehaviour;
+import sajas.core.behaviours.WakerBehaviour;
+import sajas.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -13,7 +13,7 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.AchieveREResponder;
+import sajas.proto.AchieveREResponder;
 
 import java.util.ArrayList;
 
