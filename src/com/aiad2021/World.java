@@ -1,5 +1,6 @@
 package com.aiad2021;
 
+import com.aiad2021.Agents.Auction;
 import jade.core.Profile;
 import sajas.core.Runtime;
 import sajas.wrapper.AgentController;

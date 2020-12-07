@@ -14,10 +14,14 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import sajas.proto.AchieveREResponder;
+import uchicago.src.sim.analysis.OpenSequenceGraph;
+import uchicago.src.sim.gui.Drawable;
+import uchicago.src.sim.gui.SimGraphics;
 
+import java.awt.*;
 import java.util.ArrayList;
 
-public class Auction extends Agent {
+public class Auction extends Agent implements Drawable {
 
     private int id;
 
@@ -40,17 +44,31 @@ public class Auction extends Agent {
     //GUI
     private AuctionGUI auctionGUI;
 
+    private OpenSequenceGraph plot;
+
+    public Auction( int id, String type,int duration,double basePrice, double minBid, OpenSequenceGraph plot  ){
+        this.id=id;
+        this.type=type;
+        this.duration=duration;
+        this.basePrice=basePrice;
+        this.minBid=minBid;
+        this.plot= plot;
+    }
+
     @Override
     protected void setup() {
         //used to get parameters passes on initialization
-        Object[] args = this.getArguments();
+        //bject[] args = this.getArguments();
 
         //init class
-        this.id = (int) args[0];
-        this.type = (String) args[1];
-        this.duration = (int) args[2];
-        this.basePrice = (double) args[3];
-        this.minBid = (double) args[4];
+       // this.id = (int) args[0];
+       // this.type = (String) args[1];
+       // this.duration = (int) args[2];
+       // this.basePrice = (double) args[3];
+       // this.minBid = (double) args[4];
+
+        plot.step();
+
         this.winningPrice = this.basePrice - this.minBid;
         this.secondBestBid = this.basePrice - this.minBid;
         this.auctionGUI = new AuctionGUI("" + id);
@@ -100,6 +118,24 @@ public class Auction extends Agent {
 
     }
 
+    public double getWinningPrice(){
+        return this.winningPrice;
+    }
+    @Override
+    public void draw(SimGraphics simGraphics) {
+        simGraphics.drawHollowFastOval(Color.blue);
+    }
+
+    @Override
+    public int getX() {
+        return this.duration;
+    }
+
+    @Override
+    public int getY() {
+        return (int) this.winningPrice;
+    }
+
     //notify winner
     class notifyWinner extends WakerBehaviour {
 
@@ -116,6 +152,7 @@ public class Auction extends Agent {
             super.onWake();
             if (type.equals("sprice"))
                 winningPrice = secondBestBid;
+                plot.step();
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
             if (currentWinnerId.equals(" "))
@@ -192,6 +229,7 @@ public class Auction extends Agent {
                         reply.setPerformative(ACLMessage.AGREE);
                         amountOfBids++;
                         winningPrice = bidValue;
+                        plot.step();
                         currentWinnerId = request.getSender().getName().split("@")[0];
                     } else {
                         reply.setContent("" + winningPrice);
@@ -218,6 +256,7 @@ public class Auction extends Agent {
                         if (bidValue > winningPrice) {
                             secondBestBid = winningPrice;
                             winningPrice = bidValue;
+                            plot.step();
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         } else if (bidValue > secondBestBid) {
                             secondBestBid = bidValue;
@@ -232,6 +271,7 @@ public class Auction extends Agent {
                             break;
                         } else if (bidValue > winningPrice) {
                             winningPrice = bidValue;
+                            plot.step();
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
                         reply.setContent("Your offer was accepted");

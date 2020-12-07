@@ -38,15 +38,21 @@ public class User extends Agent {
 
     // private ArrayList;
 
+    public User(int id, String username,double money){
+        this.id = id;
+        this.username = username;
+        this.money = money;
+    }
+
     @Override
     protected void setup() {
         // used to get parameters passes on initialization
-        Object[] args = this.getArguments();
+        //Object[] args = this.getArguments();
 
         // setup params
-        this.id = (int) args[0];
-        this.username = (String) args[1];
-        this.money = (double) args[2];
+        //this.id = (int) args[0];
+        //this.username = (String) args[1];
+        //this.money = (double) args[2];
 
         this.auctionsList = new Hashtable<>();
         this.bidsList = new Hashtable<>();
