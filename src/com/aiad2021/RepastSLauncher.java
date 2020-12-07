@@ -4,7 +4,6 @@ import com.aiad2021.Agents.Auction;
 import com.aiad2021.Agents.User;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
-import jade.wrapper.StaleProxyException;
 import sajas.core.Runtime;
 import sajas.wrapper.ContainerController;
 import sajas.sim.repast3.Repast3Launcher;
@@ -15,6 +14,7 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class RepastSLauncher extends Repast3Launcher {
+
     private ContainerController mainContainer;
     private Runtime rt;
     private Profile profile;
@@ -57,6 +57,7 @@ public class RepastSLauncher extends Repast3Launcher {
     public int getWinningBid(){
         return (int) auctionsList.get(0).getWinningPrice();
     }
+
     @Override
     public void begin() {
         super.begin();  // crucial!
@@ -78,8 +79,6 @@ public class RepastSLauncher extends Repast3Launcher {
 
         //build schedule
         getSchedule().scheduleActionAt(100, plot, "step", Schedule.LAST);
-
-
         getSchedule().execute();
 
         //build simulation ambient
