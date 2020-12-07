@@ -58,7 +58,7 @@ public class Auction extends Agent implements Drawable {
     @Override
     protected void setup() {
         //used to get parameters passes on initialization
-        //bject[] args = this.getArguments();
+        //Object[] args = this.getArguments();
 
         //init class
        // this.id = (int) args[0];

@@ -81,21 +81,13 @@ public class RepastSLauncher extends Repast3Launcher {
 
 
         getSchedule().execute();
-        //agents
-        User user1 = new User(1,"JohnDoe",1000);
-        User user2 = new User(2,"JohnDoe",1000);
-        Auction auction1 = new Auction(1,"english",250,10,5,plot);
 
-        this.usersList.add(user1);
-        this.usersList.add(user2);
-        this.auctionsList.add(auction1);
+        //build simulation ambient
+        Simulation sim = new Simulation(mainContainer,plot);
+        sim.sim1(this.usersList,this.auctionsList);
 
-        try {
-            this.mainContainer.acceptNewAgent("1JohnDoe",user1).start();
-            this.mainContainer.acceptNewAgent("2JohnDoe",user2).start();
-            this.mainContainer.acceptNewAgent("Auction:1",auction1).start();
-        } catch (StaleProxyException e) {
-            e.printStackTrace();
+        for(User u: this.usersList){
+            System.out.println("ola "+u.getName());
         }
 
     }
