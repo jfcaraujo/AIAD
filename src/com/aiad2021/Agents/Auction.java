@@ -115,7 +115,7 @@ public class Auction extends Agent implements Drawable {
 
         addBehaviour(new FIPARequestResp(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
         addBehaviour(new FIPASubscribeResp(this, MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE)));
-
+        System.out.println("auction setup done");
     }
 
     public double getWinningPrice(){

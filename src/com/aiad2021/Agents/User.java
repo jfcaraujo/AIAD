@@ -44,6 +44,10 @@ public class User extends Agent {
         this.money = money;
     }
 
+    public void test(String test){
+        System.out.println(test);
+    }
+
     @Override
     protected void setup() {
         // used to get parameters passes on initialization
@@ -69,6 +73,7 @@ public class User extends Agent {
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
+        System.out.println("I did initialize" + this.id);
     }
 
     class ListeningBehaviour extends CyclicBehaviour {
@@ -141,6 +146,8 @@ public class User extends Agent {
 
     private void makeBid(String auctionId, double bidValue) {
         Bid b = new Bid(money, 1, auctionId);
+        System.out.println(auctionId);
+        System.out.println(bidsList);
         if (bidsList.containsKey(auctionId))
             b = bidsList.get(auctionId);
         else if (bidValue == 0) { //create new bid value
@@ -450,8 +457,13 @@ public class User extends Agent {
         }
     }
 
+    public String getUsername() {
+        return username;
+    }
+
     // handles input from user
     public void handleMessage(String message) {
+        System.out.println(message);
         String[] parts = message.split(" ");
         switch (parts[0]) {
             case "create":

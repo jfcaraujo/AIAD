@@ -24,6 +24,13 @@ public class RepastSLauncher extends Repast3Launcher {
 
     private OpenSequenceGraph plot;
 
+    private String bid_type;
+    private int manual_agent_number;
+    private int smart_agent_number;
+    private int auto_agent_number;
+    private double[] smartness;
+    private Simulation sim;
+
     @Override
     protected void launchJADE() {
 
@@ -38,7 +45,13 @@ public class RepastSLauncher extends Repast3Launcher {
 
     @Override
     public String[] getInitParam() {
-        return new String[0];
+        return new String[]{
+                "bid_type",
+                "manual_agent_number",
+                "smart_agent_number",
+                "auto_agent_number",
+
+        };
     }
 
     @Override
@@ -50,6 +63,13 @@ public class RepastSLauncher extends Repast3Launcher {
     public void setup() {
         super.setup();  // crucial!
 
+        setBid_type("English");
+        setManual_agent_number(1);
+        setAuto_agent_number(1);
+        setSmart_agent_number(0);
+
+        double[] s = {0.5 , 0.1};
+        setSmartness(s);
         // property descriptors
         // ...
     }
@@ -66,7 +86,8 @@ public class RepastSLauncher extends Repast3Launcher {
         // ...
 
 
-        // build model
+        // build
+        // model
         usersList= new ArrayList<>();
         auctionsList = new ArrayList<>();
 
@@ -82,12 +103,68 @@ public class RepastSLauncher extends Repast3Launcher {
         getSchedule().execute();
 
         //build simulation ambient
-        Simulation sim = new Simulation(mainContainer,plot);
-        sim.sim1(this.usersList,this.auctionsList);
-
+        sim = new Simulation(mainContainer,
+                plot,
+                this.auto_agent_number,
+                this.smart_agent_number,
+                this.manual_agent_number,
+                this.bid_type,
+                this.smartness
+                );
+        sim.setup_agents(this.usersList,this.auctionsList);
+        buildSchedule();
         for(User u: this.usersList){
             System.out.println("ola "+u.getName());
         }
 
+    }
+
+    private void buildSchedule(){
+        getSchedule().scheduleActionAt(7*(this.auto_agent_number + this.smart_agent_number + this.manual_agent_number), this, "startSimulation");
+    }
+
+    public void startSimulation(){
+        sim.start();
+    }
+
+    //for parameters to work, there needs to be a setter and a getter for each parameter
+    public void setBid_type(String bid_type) {
+        this.bid_type = bid_type;
+    }
+
+    public void setAuto_agent_number(int auto_agent_number) {
+        this.auto_agent_number = auto_agent_number;
+    }
+
+    public void setManual_agent_number(int manual_agent_number) {
+        this.manual_agent_number = manual_agent_number;
+    }
+
+    public void setSmart_agent_number(int smart_agent_number) {
+        this.smart_agent_number = smart_agent_number;
+    }
+
+    public int getAuto_agent_number() {
+        return auto_agent_number;
+    }
+
+    public int getManual_agent_number() {
+        return manual_agent_number;
+    }
+
+    public int getSmart_agent_number() {
+        return smart_agent_number;
+    }
+
+    public String getBid_type() {
+        return bid_type;
+    }
+
+    public void setSmartness(double[] smartness) {
+        this.smartness = smartness;
+    }
+
+    public double[] getSmartness() {
+        return smartness;
     }
 }
