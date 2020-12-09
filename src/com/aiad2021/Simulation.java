@@ -35,10 +35,6 @@ public class Simulation {
 
     //autobid 2 agents
     public void setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList){
-        System.out.println("Bid type " + this.bid_type);
-        System.out.println("auto bid nr " + this.auto_bid_nr);
-        System.out.println("manual bid nr " + this.manual_bid_nr);
-        System.out.println("smart bid nr " + this.smart_bid_nr);
 
         for(int i= 0; i<(this.manual_bid_nr + this.smart_bid_nr + this.auto_bid_nr); i++ ){
             User newUser = new User(i,"JohnDoe" + i,1000);
@@ -54,10 +50,9 @@ public class Simulation {
             //creates all agents
             for (int i=0; i< usersList.size();i++) {
                 this.mainContainer.acceptNewAgent("JohnDoe"+i,usersList.get(i)).start();
-                System.out.println("here");
             }
+            //creates bid
             this.mainContainer.acceptNewAgent("Auction:1",auction1).start();
-            System.out.println("here3");
 
         } catch (StaleProxyException e) {
             e.printStackTrace();
@@ -66,8 +61,23 @@ public class Simulation {
 
     public void start(){
         ArrayList<User> users_list = this.getUsers();
-        System.out.println(this.getUsers());
-        for (int i= 0 ; i< users_list.size() ; i++) {
+
+        int i= 0;
+        //manual
+        for (;i< this.getManual_bid_nr() ; i++) {
+            System.out.println("here1 "+i);
+            users_list.get(i).handleMessage("bid 1 100");
+        }
+
+        //auto
+        for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr()) ; i++) {
+            System.out.println("here2 "+i);
+            users_list.get(i).handleMessage("autobid 1 2 200 0.2");
+        }
+
+        //smart
+        for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr() + this.getSmart_bid_nr()) ; i++) {
+            System.out.println("here3 "+i);
             users_list.get(i).handleMessage("bid 1 100");
         }
     }
@@ -78,5 +88,17 @@ public class Simulation {
 
     public ArrayList<User> getUsers() {
         return users;
+    }
+
+    public int getAuto_bid_nr() {
+        return auto_bid_nr;
+    }
+
+    public int getManual_bid_nr() {
+        return manual_bid_nr;
+    }
+
+    public int getSmart_bid_nr() {
+        return smart_bid_nr;
     }
 }

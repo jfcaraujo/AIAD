@@ -63,7 +63,7 @@ public class RepastSLauncher extends Repast3Launcher {
     public void setup() {
         super.setup();  // crucial!
 
-        setBid_type("English");
+        setBid_type("english");
         setManual_agent_number(1);
         setAuto_agent_number(1);
         setSmart_agent_number(0);
@@ -120,7 +120,7 @@ public class RepastSLauncher extends Repast3Launcher {
     }
 
     private void buildSchedule(){
-        getSchedule().scheduleActionAt(7*(this.auto_agent_number + this.smart_agent_number + this.manual_agent_number), this, "startSimulation");
+        getSchedule().scheduleActionAt(30*(this.auto_agent_number + this.smart_agent_number + this.manual_agent_number), this, "startSimulation");
     }
 
     public void startSimulation(){
