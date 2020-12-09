@@ -78,7 +78,7 @@ public class Auction extends Agent implements Drawable {
         this.auctionGUI = new AuctionGUI("" + id);
         this.auctionGUI.setVisible(true);
 
-        this.currentWinnerId = " ";
+        this.currentWinnerId = "none";
         this.amountOfBids = 0;
         this.participants = new ArrayList<>();
         this.madeOffer = new ArrayList<>();
@@ -160,12 +160,12 @@ public class Auction extends Agent implements Drawable {
             space.putObjectAt(0, (int) winningPrice,null);
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
-            if (currentWinnerId.equals(" "))
+            if (currentWinnerId.equals("none"))
                 System.out.println("There was no winner!");
             else {
                 System.out.println("Winner was " + currentWinnerId + " and the price: " + winningPrice + "€");
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM_IF);
-                msg.addReceiver(new AID(currentWinnerId, false));
+                msg.addReceiver(new sajas.core.AID(currentWinnerId, false));
                 String price = String.valueOf(winningPrice);
                 msg.setContent("Won " + this.getAgent().getName().split("@")[0] + " " + price);
                 send(msg);
@@ -243,7 +243,7 @@ public class Auction extends Agent implements Drawable {
                     }
                     break;
                 case "dutch":
-                    if (currentWinnerId.equals(" ")) {
+                    if (currentWinnerId.equals("none")) {
                         reply.setPerformative(ACLMessage.INFORM_IF);
                         reply.setContent("Won " + this.getAgent().getName().split("@")[0] + "! " + basePrice);
                         currentWinnerId = "Dutch";
@@ -342,13 +342,12 @@ public class Auction extends Agent implements Drawable {
     }
 
     public void informAll(String aidName, boolean ended) {//argument is person to be excluded of inform all
-
         for (AID participant : this.participants) {
             if ((!participant.getName().equals(aidName)) && !participant.getName().split("@")[0].equals((aidName))) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);
                 if (ended) {
-                    if (currentWinnerId.equals(" ")) {
+                    if (currentWinnerId.equals("none")) {
                         message.setContent("Auction ended without a winner");
                     } else message.setContent("Lost " + currentWinnerId + " " + winningPrice);
                 } else {
@@ -365,7 +364,7 @@ public class Auction extends Agent implements Drawable {
 
     public void informAllDutch() {//for dutch auctions
 
-        if (!currentWinnerId.equals(" ")) {
+        if (!currentWinnerId.equals("none")) {
             for (AID participant : this.participants) {
                 ACLMessage message = new ACLMessage(ACLMessage.INFORM_IF);
                 message.addReceiver(participant);

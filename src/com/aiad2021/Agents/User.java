@@ -38,7 +38,7 @@ public class User extends Agent {
 
     // private ArrayList;
 
-    public User(int id, String username,double money){
+    public User(int id, String username, double money) {
         this.id = id;
         this.username = username;
         this.money = money;
@@ -98,7 +98,7 @@ public class User extends Agent {
                             gui.addText(winMsg);
                             if (auctionInfo.getType().equals("dutch")) money = money - Double.parseDouble(parts[2]);
                         } else if (parts[0].equals("Lost")) { //if lost
-                            String str = "You lost " + auctionID + ", winning bid was" + parts[2] + "€";
+                            String str = "You lost " + auctionID + ", winning bid was " + parts[2] + "€";
                             if (!auctionInfo.getType().equals("english")) {
                                 money = money + auctionInfo.getCurrentBid();
                                 auctionInfo.setCurrentBid(0);
@@ -119,6 +119,14 @@ public class User extends Agent {
                             gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
                             break;
                         }
+                    case 5://ended with no winner
+                        if (msg.getContent().equals("Auction ended without a winner"))
+                            gui.addText("Auction " + auctionID + " ended without a winner");
+                        else gui.addText(msg.getContent());
+                        break;
+                    default:
+                        gui.addText(msg.getContent());
+                        break;
                 }
             } else {
                 block();
@@ -256,7 +264,7 @@ public class User extends Agent {
             Vector<ACLMessage> v = new Vector<>();
             // ...
 
-            msg.addReceiver(new AID(this.auctionId, false));
+            msg.addReceiver(new sajas.core.AID(this.auctionId, false));
             msg.setContent(this.msgContent);
 
             v.add(msg);
@@ -270,9 +278,10 @@ public class User extends Agent {
         protected void handleInform(ACLMessage inform) {
             String[] parts = inform.getContent().split(" ");
             AuctionInfo auctionInfo = auctionsList.get(auctionId);
+            System.out.println(inform.getContent());
             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
             if (auctionInfo.getType().equals("english"))
-                auctionInfo.setMovement(Integer.parseInt(parts[3]));
+                auctionInfo.setMovement(Integer.parseInt(parts[2]));
             else auctionInfo.setMovement(Integer.parseInt(parts[1]));
             auctionInfo.setUpdated();
         }
