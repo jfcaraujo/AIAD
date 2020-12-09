@@ -9,6 +9,10 @@ import sajas.wrapper.ContainerController;
 import sajas.sim.repast3.Repast3Launcher;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.engine.Schedule;
+import uchicago.src.sim.gui.DisplaySurface;
+import uchicago.src.sim.gui.Object2DDisplay;
+import uchicago.src.sim.space.Object2DGrid;
+import uchicago.src.sim.space.Object2DTorus;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,6 +25,9 @@ public class RepastSLauncher extends Repast3Launcher {
 
     private ArrayList<Auction> auctionsList;
     private ArrayList<User> usersList;
+
+    private DisplaySurface dsurf;
+    private Object2DTorus space;
 
     private OpenSequenceGraph plot;
 
@@ -61,11 +68,17 @@ public class RepastSLauncher extends Repast3Launcher {
     @Override
     public void begin() {
         super.begin();  // crucial!
-        //World w = new World(rt,profile,mainContainer,"world.csv");
-        // display surfaces, spaces, displays, plots, ...
-        // ...
+        buildModel();
+        buildDisplay();
+        buildSchedule();
 
+        //build simulation ambient
+        Simulation sim = new Simulation(mainContainer,plot,space);
+        sim.sim1(this.usersList,this.auctionsList);
 
+    }
+
+    private void buildModel(){
         // build model
         usersList= new ArrayList<>();
         auctionsList = new ArrayList<>();
@@ -77,17 +90,32 @@ public class RepastSLauncher extends Repast3Launcher {
         plot.addSequence("Green - CC", this::getWinningBid, Color.GREEN, 10);
         plot.display();
 
-        //build schedule
+        space = new Object2DTorus(500,1000);
+
+        //space.putObjectAt(...
+        //usersList.add(...)
+    }
+
+    private void buildSchedule(){
+        getSchedule().scheduleActionAtInterval(1, dsurf, "updateDisplay", Schedule.LAST);
         getSchedule().scheduleActionAt(100, plot, "step", Schedule.LAST);
-        getSchedule().execute();
+        //getSchedule().execute();
 
-        //build simulation ambient
-        Simulation sim = new Simulation(mainContainer,plot);
-        sim.sim1(this.usersList,this.auctionsList);
+    }
 
-        for(User u: this.usersList){
-            System.out.println("ola "+u.getName());
-        }
+    private void buildDisplay(){
+
+        if (dsurf != null) dsurf.dispose();
+        this.dsurf = new DisplaySurface(this,"Auction Simulation");
+        registerDisplaySurface("Auction Simulation",dsurf);
+
+        // space and display surface
+        Object2DDisplay display = new Object2DDisplay(space);
+        display.setObjectList(auctionsList);
+        dsurf.addDisplayableProbeable(display, "Agents Space");
+        addSimEventListener(dsurf);
+        dsurf.display();
+
 
     }
 }

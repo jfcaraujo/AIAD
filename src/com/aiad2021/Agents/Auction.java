@@ -17,6 +17,7 @@ import sajas.proto.AchieveREResponder;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
+import uchicago.src.sim.space.Object2DTorus;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -45,14 +46,16 @@ public class Auction extends Agent implements Drawable {
     private AuctionGUI auctionGUI;
 
     private OpenSequenceGraph plot;
+    private Object2DTorus space;
 
-    public Auction( int id, String type,int duration,double basePrice, double minBid, OpenSequenceGraph plot  ){
+    public Auction( int id, String type,int duration,double basePrice, double minBid, OpenSequenceGraph plot,Object2DTorus space  ){
         this.id=id;
         this.type=type;
         this.duration=duration;
         this.basePrice=basePrice;
         this.minBid=minBid;
         this.plot= plot;
+        this.space = space;
     }
 
     @Override
@@ -68,6 +71,7 @@ public class Auction extends Agent implements Drawable {
        // this.minBid = (double) args[4];
 
         plot.step();
+        space.putObjectAt(0, (int) winningPrice,null);
 
         this.winningPrice = this.basePrice - this.minBid;
         this.secondBestBid = this.basePrice - this.minBid;
@@ -123,7 +127,7 @@ public class Auction extends Agent implements Drawable {
     }
     @Override
     public void draw(SimGraphics simGraphics) {
-        simGraphics.drawHollowFastOval(Color.blue);
+        simGraphics.drawFastCircle(Color.blue);
     }
 
     @Override
@@ -153,6 +157,7 @@ public class Auction extends Agent implements Drawable {
             if (type.equals("sprice"))
                 winningPrice = secondBestBid;
                 plot.step();
+            space.putObjectAt(0, (int) winningPrice,null);
 
             System.out.println("Auction:" + this.a.getAID().getName() + " ended");
             if (currentWinnerId.equals(" "))
@@ -230,6 +235,7 @@ public class Auction extends Agent implements Drawable {
                         amountOfBids++;
                         winningPrice = bidValue;
                         plot.step();
+                        space.putObjectAt(0, (int) winningPrice,null);
                         currentWinnerId = request.getSender().getName().split("@")[0];
                     } else {
                         reply.setContent("" + winningPrice);
@@ -257,6 +263,7 @@ public class Auction extends Agent implements Drawable {
                             secondBestBid = winningPrice;
                             winningPrice = bidValue;
                             plot.step();
+                            space.putObjectAt(0, (int) winningPrice,null);
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         } else if (bidValue > secondBestBid) {
                             secondBestBid = bidValue;
@@ -272,6 +279,7 @@ public class Auction extends Agent implements Drawable {
                         } else if (bidValue > winningPrice) {
                             winningPrice = bidValue;
                             plot.step();
+                            space.putObjectAt(0, (int) winningPrice,null);
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
                         reply.setContent("Your offer was accepted");
