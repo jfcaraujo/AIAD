@@ -44,10 +44,6 @@ public class User extends Agent {
         this.money = money;
     }
 
-    public void test(String test){
-        System.out.println(test);
-    }
-
     @Override
     protected void setup() {
         // used to get parameters passes on initialization
