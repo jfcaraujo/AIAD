@@ -533,8 +533,7 @@ public class User extends Agent {
     }
 
     private double getNewBid(Bid bid) {
-        if (money < bid.maxBid) bid.tempMaxBid = money;
-        else bid.tempMaxBid = bid.maxBid;
+        bid.tempMaxBid = Math.min(money, bid.maxBid);
         AuctionInfo auctionInfo = this.auctionsList.get(bid.auctionId);
         switch (auctionInfo.getType()) {
             case "english":
@@ -544,7 +543,8 @@ public class User extends Agent {
                 }
                 if (bid.delay > 0 && bid.tempMaxBid - auctionInfo.getWinningPrice() <= auctionInfo.getMinBid() * bid.aggressiveness) {
                     bid.delay = 0;//the prices are getting high, time to start bidding
-                    gui.addText("Prices are getting too high, going to bid now");
+                    if (auctionInfo.getWinningPrice() + auctionInfo.getMinBid() <= bid.tempMaxBid)//not too expensive
+                        gui.addText("Prices are getting too high, going to bid now");
                     if (bid.delayedBid != null) bid.delayedBid.stop(); //cancels the delayedBid
                     bid.receivedDelay = true;
                 }
