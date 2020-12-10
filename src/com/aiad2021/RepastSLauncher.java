@@ -65,8 +65,8 @@ public class RepastSLauncher extends Repast3Launcher {
 
         setBid_type("english");
         setManual_agent_number(1);
-        setAuto_agent_number(1);
-        setSmart_agent_number(0);
+        setAuto_agent_number(0);
+        setSmart_agent_number(1);
 
         double[] s = {0.5 , 0.1};
         setSmartness(s);

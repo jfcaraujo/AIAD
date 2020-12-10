@@ -23,10 +23,8 @@ import java.util.ArrayList;
 
 public class Auction extends Agent implements Drawable {
 
-    private int id;
-
-    private long startTime;
-    private int duration;
+    private final int id;
+    private final int duration;
     protected String type;
     protected double basePrice;
     protected double minBid;
@@ -105,7 +103,6 @@ public class Auction extends Agent implements Drawable {
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
-        this.startTime = System.currentTimeMillis();
 
         if (this.type.equals("dutch")) {
             addBehaviour(new DutchAuctionBehaviour(this, this, 5 * 1000));

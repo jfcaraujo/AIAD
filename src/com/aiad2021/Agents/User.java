@@ -3,10 +3,6 @@ package com.aiad2021.Agents;
 import com.aiad2021.AuctionInfo;
 import com.aiad2021.view.CommunicationGUI;
 import jade.core.AID;
-import sajas.core.Agent;
-import sajas.core.behaviours.CyclicBehaviour;
-import sajas.core.behaviours.WakerBehaviour;
-import sajas.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
@@ -14,11 +10,15 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.util.leap.Iterator;
+import jade.wrapper.StaleProxyException;
+import sajas.core.Agent;
+import sajas.core.behaviours.CyclicBehaviour;
+import sajas.core.behaviours.WakerBehaviour;
+import sajas.domain.DFService;
 import sajas.proto.AchieveREInitiator;
 import sajas.proto.SubscriptionInitiator;
-import jade.util.leap.Iterator;
 import sajas.wrapper.AgentController;
-import jade.wrapper.StaleProxyException;
 
 import java.util.*;
 
@@ -28,8 +28,8 @@ import static java.lang.Double.min;
 public class User extends Agent {
 
     // attributes
-    private int id;
-    private String username;
+    private final int id;
+    private final String username;
     private double money;
     CommunicationGUI gui;
 
@@ -42,10 +42,6 @@ public class User extends Agent {
         this.id = id;
         this.username = username;
         this.money = money;
-    }
-
-    public void test(String test){
-        System.out.println(test);
     }
 
     @Override
@@ -112,6 +108,11 @@ public class User extends Agent {
                         } else if (bidsList.containsKey(auctionID) && !parts[1].equals(username)) {//if autobid or smartbid
                             auctionInfo.setWinningPrice(Double.parseDouble(parts[0]));
                             auctionInfo.setMovement(Integer.parseInt(parts[2]));
+                            double currentBid = auctionInfo.getCurrentBid();
+                            if (currentBid != 0)
+                                gui.addText("Recuperated " + currentBid + "€ from previous bid!");
+                            money = money + currentBid;
+                            auctionInfo.setCurrentBid(0);
                             gui.addText("I'm starting to lose");
                             makeBid(auctionID, getNewBid(bidsList.get(auctionID)));
                         } else {//update current winner of auction
@@ -122,15 +123,16 @@ public class User extends Agent {
                             money = money + currentBid;
                             auctionInfo.setCurrentBid(0);
                             gui.addText("New winner of " + auctionID + " is " + parts[1] + " with a current bid of " + parts[0]);
-                            break;
+
                         }
+                        break;
                     case 5://ended with no winner
                         if (msg.getContent().equals("Auction ended without a winner"))
                             gui.addText("Auction " + auctionID + " ended without a winner");
-                        else gui.addText(msg.getContent());
+                        else gui.addText("Default(5): " + msg.getContent());
                         break;
                     default:
-                        gui.addText(msg.getContent());
+                        gui.addText("Default: " + msg.getContent());
                         break;
                 }
             } else {
@@ -291,6 +293,10 @@ public class User extends Agent {
                 auctionInfo.setMovement(Integer.parseInt(parts[2]));
             else auctionInfo.setMovement(Integer.parseInt(parts[1]));
             auctionInfo.setUpdated();
+            Bid bid = bidsList.get(auctionId);
+            if (bid != null && bid.smart) {
+                makeBid(auctionId, getNewBid(bid));
+            }
         }
 
         protected void handleFailure(ACLMessage failure) {
@@ -564,15 +570,15 @@ public class User extends Agent {
                 return;
             }
             subscribeAuction(auctionId);
-            while (!auctionsList.get(auctionId).isUpdated()) {
-            }
+            Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
+            bidsList.put(auctionId, bid);
         } else if (!auctionsList.get(auctionId).getType().equals("english")) {
             gui.addText("autobid is only valid for auctions of type english");
-            return;
+        } else {
+            Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
+            bidsList.put(auctionId, bid);
+            makeBid(auctionId, getNewBid(bid));
         }
-        Bid bid = new Bid(maxBid, aggressiveness, auctionId, delay);
-        bidsList.put(auctionId, bid);
-        makeBid(auctionId, getNewBid(bid));
     }
 
     private void displayAllAuctions() {
