@@ -20,8 +20,10 @@ public class Simulation {
     private int auto_bid_nr;
     private int smart_bid_nr;
     private int manual_bid_nr;
+    private String aggressiveness;
+    private String delay;
 
-    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type){
+    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type , String aggressiveness, String delay){
         this.mainContainer = mainContainer;
         this.plot= plot;
         this.manual_bid_nr = manual_bid_nr;
@@ -29,6 +31,8 @@ public class Simulation {
         this.auto_bid_nr = auto_bid_nr;
         this.smart_bid_nr = smart_bid_nr;
         this.users = new ArrayList<User>();
+        this.aggressiveness = aggressiveness;
+        this.delay = delay;
     }
 
     //autobid 2 agents

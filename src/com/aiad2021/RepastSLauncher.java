@@ -28,6 +28,8 @@ public class RepastSLauncher extends Repast3Launcher {
     private int manual_agent_number;
     private int smart_agent_number;
     private int auto_agent_number;
+    private String delay;
+    private String aggressiveness;
     private Simulation sim;
 
     @Override
@@ -49,7 +51,8 @@ public class RepastSLauncher extends Repast3Launcher {
                 "manual_agent_number",
                 "smart_agent_number",
                 "auto_agent_number",
-
+                "aggressiveness",
+                "delay"
         };
     }
 
@@ -105,7 +108,9 @@ public class RepastSLauncher extends Repast3Launcher {
                 this.auto_agent_number,
                 this.smart_agent_number,
                 this.manual_agent_number,
-                this.bid_type
+                this.bid_type,
+                this.aggressiveness,
+                this.delay
                 );
         sim.setup_agents(this.usersList,this.auctionsList);
         buildSchedule();
@@ -140,6 +145,14 @@ public class RepastSLauncher extends Repast3Launcher {
         this.smart_agent_number = smart_agent_number;
     }
 
+    public void setAggressiveness(String aggressiveness) {
+        this.aggressiveness = aggressiveness;
+    }
+
+    public void setDelay(String delay) {
+        this.delay = delay;
+    }
+
     public int getAuto_agent_number() {
         return auto_agent_number;
     }
@@ -154,5 +167,13 @@ public class RepastSLauncher extends Repast3Launcher {
 
     public String getBid_type() {
         return bid_type;
+    }
+
+    public String getAggressiveness() {
+        return aggressiveness;
+    }
+
+    public String getDelay() {
+        return delay;
     }
 }
