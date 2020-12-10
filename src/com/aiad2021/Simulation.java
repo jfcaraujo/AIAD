@@ -20,15 +20,13 @@ public class Simulation {
     private int auto_bid_nr;
     private int smart_bid_nr;
     private int manual_bid_nr;
-    private double[] smartness;
 
-    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type , double[] smartness){
+    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type){
         this.mainContainer = mainContainer;
         this.plot= plot;
         this.manual_bid_nr = manual_bid_nr;
         this.bid_type = bid_type;
         this.auto_bid_nr = auto_bid_nr;
-        this.smartness = smartness;
         this.smart_bid_nr = smart_bid_nr;
         this.users = new ArrayList<User>();
     }
