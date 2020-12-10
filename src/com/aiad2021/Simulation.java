@@ -68,7 +68,7 @@ public class Simulation {
         //manual
         for (;i< this.getManual_bid_nr() ; i++) {
             System.out.println("here1 "+i);
-            users_list.get(i).handleMessage("bid 1 100");
+            users_list.get(i).handleMessage("bid 1 10");
         }
 
         //auto
@@ -81,7 +81,7 @@ public class Simulation {
         for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr() + this.getSmart_bid_nr()) ; i++) {
             System.out.println("here3 "+i);
             //users_list.get(i).handleMessage("bid 1 100");
-            users_list.get(i).handleMessage("smartbid 1 200");
+            users_list.get(i).handleMessage("smartbid 1 300");
         }
     }
 
