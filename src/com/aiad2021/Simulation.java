@@ -76,8 +76,8 @@ public class Simulation {
         //smart
         for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr() + this.getSmart_bid_nr()) ; i++) {
             System.out.println("here3 "+i);
-            users_list.get(i).handleMessage("bid 1 100");
-            //users_list.get(i).handleMessage("smartbid 1 100");
+            //users_list.get(i).handleMessage("bid 1 100");
+            users_list.get(i).handleMessage("smartbid 1 200");
         }
     }
 
