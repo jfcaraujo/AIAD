@@ -69,6 +69,8 @@ public class RepastSLauncher extends Repast3Launcher {
         setManual_agent_number(1);
         setAuto_agent_number(1);
         setSmart_agent_number(1);
+        setAggressiveness("");
+        setDelay("");
 
         // property descriptors
         // ...
