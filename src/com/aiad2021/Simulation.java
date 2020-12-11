@@ -107,11 +107,6 @@ public class Simulation {
 
     public void bidsGenerator(){
 
-        for (int element: getAggressivenessList()
-             ) {
-            System.out.println(element + "hello");
-        }
-
         ArrayList<User> users_list = this.getUsers();
         int i= 0;
         //manual
@@ -132,6 +127,8 @@ public class Simulation {
         }
     }
 
+
+    //setters and getters
     public void addUser(User user){
         this.users.add(user);
     }
