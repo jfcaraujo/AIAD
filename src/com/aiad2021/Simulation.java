@@ -34,6 +34,7 @@ public class Simulation {
         this.auto_bid_nr = auto_bid_nr;
         this.smart_bid_nr = smart_bid_nr;
         this.users = new ArrayList<User>();
+        this.auctionsList = new ArrayList<Auction>();
         this.aggressiveness = aggressiveness;
         this.delay = delay;
 
@@ -46,36 +47,71 @@ public class Simulation {
 
     }
 
-    //autobid 2 agents
-    public void setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList){
+
+    public boolean setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList){
 
         for(int i= 0; i<(this.manual_bid_nr + this.smart_bid_nr + this.auto_bid_nr); i++ ){
             User newUser = new User(i,"JohnDoe" + i,1000);
             addUser(newUser);
             usersList.add(newUser);
         }
-        //only working with english bids so far
-        Auction auction1 = new Auction(1,this.bid_type,250,10,5,plot);
 
-        auctionsList.add(auction1);
+        if(!auctionSetup(auctionsList))
+            return false;
+
+        System.out.println("Auction list size " + auctionsList.size());
+        System.out.println("Real auction list size " + getAuctionsList().size());
 
         try {
             //creates all agents
             for (int i=0; i< usersList.size();i++) {
                 this.mainContainer.acceptNewAgent("JohnDoe"+i,usersList.get(i)).start();
             }
-            //creates bid
-            this.mainContainer.acceptNewAgent("Auction:1",auction1).start();
+            //creates bids
+            for (int i=1; i<= auctionsList.size();i++) {
+                System.out.println("Im hereee");
+                this.mainContainer.acceptNewAgent("Auction:"+i,auctionsList.get(i-1)).start();            }
 
         } catch (StaleProxyException e) {
             e.printStackTrace();
         }
+
+        return true;
+    }
+
+    public boolean auctionSetup(ArrayList<Auction> auctionsList){
+
+        String[] auctions = this.getBid_type().split(" ");
+
+        if(auctions.length==0){
+            System.out.println("Error: Bid type needs to have at least one type of auction or else no auctions can be created");
+            return false;
+        }else {
+            if (auctions.length>1 && !this.getBid_type().matches("(english|dutch)( (english|dutch))+")) {
+                System.out.println("Error: When declaring more than one auction, the only types available are english and dutch");
+                return false;
+            }else if(auctions.length==1 && !this.getBid_type().matches("(english|dutch|fprice|sprice)")){
+                System.out.println("Error: Invalid type of auction. The existing types are english, dutch, fprice and sprice");
+                return false;
+            }
+        }
+
+        //only working with english bids so far
+        for (int i = 1; i <= auctions.length; i++) {
+            Auction auction = new Auction(i,auctions[i-1],250,10,5,plot);
+
+            addAuction(auction);
+            auctionsList.add(auction);//for some reason this is the only way that it updates this var
+        }
+
+        return true;
+
     }
 
     public void start(){
 
         //WARNING - DOES NOT TOLERATE SPACES AFTER THE FINAL NUMBER
-        if(getAggressiveness().matches("\\d+( \\d+)*") && getDelay().matches("\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*")){
+        if(getAggressiveness().matches("(\\d+( \\d+)*)?") && getDelay().matches("(\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*)?")){
             System.out.println(":) I was accepted");
         }else System.out.println(":( I was not accepted");
 
@@ -109,28 +145,40 @@ public class Simulation {
 
         ArrayList<User> users_list = this.getUsers();
         int i= 0;
-        //manual
+        //manual - can bid on every single type of auction
         for (;i< this.getManual_bid_nr() ; i++) {
-            users_list.get(i).handleMessage("bid 1 10");
+            for (int j = 1; j <= getAuctionsList().size(); j++) {
+                users_list.get(i).handleMessage("bid "+ j + " 10");
+            }
         }
 
-        //auto
-        int[] aggressiveness = getAggressivenessList();
-        double[] delay = getDelayList();
-        for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr()) ; i++) {
-            users_list.get(i).handleMessage("autobid 1 " + aggressiveness[i-this.getManual_bid_nr()] + " 200 " + delay[i-this.getManual_bid_nr()]);
-        }
+        //auto and smart - can only bid in dutch and english auctions
+        if(!getBid_type().equals("fprice")&&!getBid_type().equals("sprice")) {
 
-        //smart
-        for (; i< (this.getManual_bid_nr() +this.getAuto_bid_nr() + this.getSmart_bid_nr()) ; i++) {
-            users_list.get(i).handleMessage("smartbid 1 300");
-        }
+            //auto
+            int[] aggressiveness = getAggressivenessList();
+            double[] delay = getDelayList();
+
+            for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr()); i++) {
+                System.out.println("Auto nr " + (i - this.getManual_bid_nr()));
+                users_list.get(i).handleMessage("autobid 1 " + aggressiveness[i - this.getManual_bid_nr()] + " 200 " + delay[i - this.getManual_bid_nr()]);
+            }
+
+            //smart
+            for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr() + this.getSmart_bid_nr()); i++) {
+                users_list.get(i).handleMessage("smartbid 1 300");
+            }
+        } else System.out.println("Warning: fprice or sprice was declared, cant bid with auto and smart agents with those bid types");
     }
 
 
     //setters and getters
     public void addUser(User user){
         this.users.add(user);
+    }
+
+    public void addAuction(Auction auction){
+        this.auctionsList.add(auction);
     }
 
     public ArrayList<User> getUsers() {
@@ -167,6 +215,10 @@ public class Simulation {
 
     public String getDelay() {
         return delay;
+    }
+
+    public String getBid_type() {
+        return bid_type;
     }
 
     public void setAggressivenessList(int[] aggressivenessList) {
