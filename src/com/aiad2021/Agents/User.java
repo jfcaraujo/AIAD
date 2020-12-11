@@ -69,7 +69,6 @@ public class User extends Agent {
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
-        System.out.println("I did initialize" + this.id);
     }
 
     class ListeningBehaviour extends CyclicBehaviour {
@@ -156,8 +155,6 @@ public class User extends Agent {
 
     private void makeBid(String auctionId, double bidValue) {
         Bid b = new Bid(money, 1, auctionId);
-        System.out.println(auctionId);
-        System.out.println(bidsList);
         if (bidsList.containsKey(auctionId))
             b = bidsList.get(auctionId);
         else if (bidValue == 0) { //create new bid value
@@ -220,7 +217,6 @@ public class User extends Agent {
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
-            System.out.println(this.auctionId);
             msg.addReceiver(new sajas.core.AID(this.auctionId, false));
             msg.setContent(this.msgContent);
 
@@ -478,7 +474,7 @@ public class User extends Agent {
 
     // handles input from user
     public void handleMessage(String message) {
-        System.out.println(message);
+        System.out.println(this.id + "  ------  " + message);
         String[] parts = message.split(" ");
         switch (parts[0]) {
             case "create":

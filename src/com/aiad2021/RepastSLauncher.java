@@ -77,7 +77,6 @@ public class RepastSLauncher extends Repast3Launcher {
     }
 
     public int getWinningBid(){
-        System.out.println("repast stress "+auctionsList.size());
         return (int) auctionsList.get(0).getWinningPrice();
     }
 
@@ -116,11 +115,7 @@ public class RepastSLauncher extends Repast3Launcher {
                 this.delay
                 );
         sim.setup_agents(this.usersList,this.auctionsList);
-        System.out.println("After setup "+this.auctionsList.size());
         buildSchedule();
-        for(User u: this.usersList){
-            System.out.println("ola "+u.getName());
-        }
 
     }
 

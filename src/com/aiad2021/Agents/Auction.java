@@ -133,6 +133,10 @@ public class Auction extends Agent implements Drawable {
         return (int) this.winningPrice;
     }
 
+    public String getType() {
+        return type;
+    }
+
     //notify winner
     class notifyWinner extends WakerBehaviour {
 

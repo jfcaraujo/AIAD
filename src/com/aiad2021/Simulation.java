@@ -59,9 +59,6 @@ public class Simulation {
         if(!auctionSetup(auctionsList))
             return false;
 
-        System.out.println("Auction list size " + auctionsList.size());
-        System.out.println("Real auction list size " + getAuctionsList().size());
-
         try {
             //creates all agents
             for (int i=0; i< usersList.size();i++) {
@@ -69,7 +66,6 @@ public class Simulation {
             }
             //creates bids
             for (int i=1; i<= auctionsList.size();i++) {
-                System.out.println("Im hereee");
                 this.mainContainer.acceptNewAgent("Auction:"+i,auctionsList.get(i-1)).start();            }
 
         } catch (StaleProxyException e) {
@@ -148,25 +144,34 @@ public class Simulation {
         //manual - can bid on every single type of auction
         for (;i< this.getManual_bid_nr() ; i++) {
             for (int j = 1; j <= getAuctionsList().size(); j++) {
+                System.out.println("User nr " + i);
                 users_list.get(i).handleMessage("bid "+ j + " 10");
             }
         }
 
         //auto and smart - can only bid in dutch and english auctions
         if(!getBid_type().equals("fprice")&&!getBid_type().equals("sprice")) {
-
             //auto
             int[] aggressiveness = getAggressivenessList();
             double[] delay = getDelayList();
-
+            System.out.println("Im starting in auto");
             for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr()); i++) {
-                System.out.println("Auto nr " + (i - this.getManual_bid_nr()));
-                users_list.get(i).handleMessage("autobid 1 " + aggressiveness[i - this.getManual_bid_nr()] + " 200 " + delay[i - this.getManual_bid_nr()]);
+                for (int j = 1; j <= getAuctionsList().size(); j++) {
+                    System.out.println("User nr " + i);
+                    if(getAuctionsList().get(j-1).getType().equals("english")) {
+                        System.out.println("im on english");
+                        users_list.get(i).handleMessage("autobid " + j + " " + aggressiveness[i - this.getManual_bid_nr()] + " 200 " + delay[i - this.getManual_bid_nr()]);
+                    }
+                }
             }
 
+            System.out.println("IM on smart");
             //smart
             for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr() + this.getSmart_bid_nr()); i++) {
-                users_list.get(i).handleMessage("smartbid 1 300");
+                for (int j = 1; j <= getAuctionsList().size(); j++) {
+                    System.out.println("User nr " + i);
+                    users_list.get(i).handleMessage("smartbid " + j + " 300");
+                }
             }
         } else System.out.println("Warning: fprice or sprice was declared, cant bid with auto and smart agents with those bid types");
     }
