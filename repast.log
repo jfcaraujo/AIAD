@@ -1,13 +1,10 @@
-Error creating action: printInitialData on com.aiad2021.RepastSLauncher
-uchicago.src.codegen.GeneratorException: com.aiad2021.RepastSLauncher.printInitialData()
-java.lang.NoSuchMethodException: com.aiad2021.RepastSLauncher.printInitialData()
-	at uchicago.src.sim.util.ByteCodeBuilder.getMethod(Unknown Source)
-	at uchicago.src.sim.util.ByteCodeBuilder.getMethod(Unknown Source)
-	at uchicago.src.sim.util.ByteCodeBuilder.generateBasicAction(Unknown Source)
-	at uchicago.src.sim.engine.ActionUtilities.createActionFor(Unknown Source)
-	at uchicago.src.sim.engine.ScheduleBase.scheduleActionAt(Unknown Source)
-	at uchicago.src.sim.engine.ScheduleBase.scheduleActionAt(Unknown Source)
-	at com.aiad2021.RepastSLauncher.begin(RepastSLauncher.java:80)
+Error creating NumericDataSource: Method getBidsList() must return a number
+uchicago.src.codegen.GeneratorException: Method getBidsList() must return a number
+	at uchicago.src.sim.util.ByteCodeBuilder.getMethodRetDouble(Unknown Source)
+	at uchicago.src.sim.util.ByteCodeBuilder.generateNumericDataSource(Unknown Source)
+	at uchicago.src.sim.analysis.AbstractDataSourceRecorder.createNumericDataSource(Unknown Source)
+	at uchicago.src.sim.analysis.DataRecorder.createNumericDataSource(Unknown Source)
+	at com.aiad2021.RepastSLauncher.begin(RepastSLauncher.java:92)
 	at uchicago.src.sim.engine.BaseController.beginModel(Unknown Source)
 	at uchicago.src.sim.engine.AbstractGUIController.beginModel(Unknown Source)
 	at uchicago.src.sim.engine.Controller.beginModel(Unknown Source)

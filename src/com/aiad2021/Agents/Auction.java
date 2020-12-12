@@ -71,7 +71,7 @@ public class Auction extends Agent implements Drawable {
        // this.minBid = (double) args[4];
 
         plot.step();
-        space.putObjectAt(0, (int) winningPrice,null);
+        //space.putObjectAt(0, (int) winningPrice,null);
 
         this.winningPrice = this.basePrice - this.minBid;
         this.secondBestBid = this.basePrice - this.minBid;
@@ -127,7 +127,7 @@ public class Auction extends Agent implements Drawable {
     }
     @Override
     public void draw(SimGraphics simGraphics) {
-        simGraphics.drawFastCircle(Color.blue);
+        simGraphics.drawCircle(Color.blue);
     }
 
     @Override
@@ -235,7 +235,7 @@ public class Auction extends Agent implements Drawable {
                         amountOfBids++;
                         winningPrice = bidValue;
                         plot.step();
-                        space.putObjectAt(0, (int) winningPrice,null);
+                        //space.putObjectAt(0, (int) winningPrice,null);
                         currentWinnerId = request.getSender().getName().split("@")[0];
                     } else {
                         reply.setContent("" + winningPrice);
@@ -263,7 +263,7 @@ public class Auction extends Agent implements Drawable {
                             secondBestBid = winningPrice;
                             winningPrice = bidValue;
                             plot.step();
-                            space.putObjectAt(0, (int) winningPrice,null);
+                           // space.putObjectAt(0, (int) winningPrice,null);
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         } else if (bidValue > secondBestBid) {
                             secondBestBid = bidValue;
@@ -279,7 +279,7 @@ public class Auction extends Agent implements Drawable {
                         } else if (bidValue > winningPrice) {
                             winningPrice = bidValue;
                             plot.step();
-                            space.putObjectAt(0, (int) winningPrice,null);
+                           // space.putObjectAt(0, (int) winningPrice,null);
                             currentWinnerId = request.getSender().getName().split("@")[0];
                         }
                         reply.setContent("Your offer was accepted");

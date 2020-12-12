@@ -7,6 +7,7 @@ import jade.core.ProfileImpl;
 import sajas.core.Runtime;
 import sajas.wrapper.ContainerController;
 import sajas.sim.repast3.Repast3Launcher;
+import uchicago.src.sim.analysis.DataRecorder;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.gui.DisplaySurface;
@@ -30,6 +31,8 @@ public class RepastSLauncher extends Repast3Launcher {
     private Object2DTorus space;
 
     private OpenSequenceGraph plot;
+
+    DataRecorder dr;
 
     @Override
     protected void launchJADE() {
@@ -61,20 +64,37 @@ public class RepastSLauncher extends Repast3Launcher {
         // ...
     }
 
-    public int getWinningBid(){
+    public int getWinningBid1(){
         return (int) auctionsList.get(0).getWinningPrice();
+    }
+    public int getWinningBid2(){
+        return (int) auctionsList.get(1).getWinningPrice();
     }
 
     @Override
     public void begin() {
         super.begin();  // crucial!
+
+        dr = new DataRecorder("data.csv",this);
+
         buildModel();
         buildDisplay();
         buildSchedule();
 
         //build simulation ambient
-        Simulation sim = new Simulation(mainContainer,plot,space);
-        sim.sim1(this.usersList,this.auctionsList);
+        Simulation sim = new Simulation(mainContainer,plot,space,dr);
+        sim.sim2(this.usersList,this.auctionsList);
+        int i=1;
+
+        for(User u: this.usersList){
+            dr.createNumericDataSource("User "+i,u,"getBid" );
+            dr.createNumericDataSource("User "+i,u,"getAuction" );
+            i++;
+        }
+        space.putObjectAt(0,0,this.auctionsList.get(0));
+        space.putObjectAt(0,0,this.auctionsList.get(1));
+
+
 
     }
 
@@ -84,21 +104,26 @@ public class RepastSLauncher extends Repast3Launcher {
         auctionsList = new ArrayList<>();
 
         if (plot != null) plot.dispose();
-        plot = new OpenSequenceGraph("Population", this);
-        plot.setAxisTitles("World cycles", "# of people");
+        plot = new OpenSequenceGraph("Auction", this);
+        plot.setAxisTitles("Time", "Bid Value");
 
-        plot.addSequence("Green - CC", this::getWinningBid, Color.GREEN, 10);
+        plot.addSequence("English", this::getWinningBid1, Color.GREEN, 10);
+        plot.addSequence("Duth", this::getWinningBid2, Color.BLUE, 10);
         plot.display();
 
         space = new Object2DTorus(500,1000);
 
-        //space.putObjectAt(...
-        //usersList.add(...)
+        //space.putObjectAt(0,0,this.auctionsList.get(0));
+        //space.putObjectAt(0,0,this.auctionsList.get(1));
+
     }
 
     private void buildSchedule(){
         getSchedule().scheduleActionAtInterval(1, dsurf, "updateDisplay", Schedule.LAST);
-        getSchedule().scheduleActionAt(100, plot, "step", Schedule.LAST);
+        getSchedule().scheduleActionAt(0.1, plot, "step", Schedule.LAST);
+        getSchedule().scheduleActionAtEnd(plot,"writeToFile");
+        getSchedule().scheduleActionAt(1,dr,"record");
+        getSchedule().scheduleActionAtEnd(dr,"writeToFile");
         //getSchedule().execute();
 
     }

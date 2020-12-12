@@ -19,13 +19,19 @@ import sajas.proto.SubscriptionInitiator;
 import jade.util.leap.Iterator;
 import sajas.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import uchicago.src.sim.analysis.DataRecorder;
+import uchicago.src.sim.analysis.DataSource;
+import uchicago.src.sim.analysis.NumericDataSource;
+import uchicago.src.sim.gui.Drawable;
+import uchicago.src.sim.gui.SimGraphics;
 
+import java.awt.*;
 import java.util.*;
 
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 
-public class User extends Agent {
+public class User extends Agent implements DataSource, Drawable {
 
     // attributes
     private int id;
@@ -36,12 +42,21 @@ public class User extends Agent {
     private Hashtable<String, Bid> bidsList;
     private Hashtable<String, AuctionInfo> auctionsList;
 
-    // private ArrayList;
+    private DataRecorder dr;
 
-    public User(int id, String username, double money) {
+
+
+    public User(int id, String username, double money, DataRecorder dr) {
         this.id = id;
         this.username = username;
         this.money = money;
+        this.dr=dr;
+    }
+    public int getAuction(){
+        return 1;
+    }
+    public int getBid(){
+        return 2;
     }
 
     @Override
@@ -69,6 +84,28 @@ public class User extends Agent {
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
+        //dr.record();
+
+    }
+
+    @Override
+    public Object execute() {
+        return this;
+    }
+
+    @Override
+    public void draw(SimGraphics simGraphics) {
+        simGraphics.drawCircle(Color.WHITE);
+    }
+
+    @Override
+    public int getX() {
+        return 0;
+    }
+
+    @Override
+    public int getY() {
+        return 0;
     }
 
     class ListeningBehaviour extends CyclicBehaviour {
@@ -188,7 +225,7 @@ public class User extends Agent {
             auctionInfo.setCurrentBid(bidValue);
         }
         addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
-
+        dr.record();
     }
 
     private void subscribeAuction(String auctionId) {
