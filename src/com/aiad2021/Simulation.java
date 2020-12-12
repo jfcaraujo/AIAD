@@ -4,6 +4,7 @@ import com.aiad2021.Agents.Auction;
 import com.aiad2021.Agents.User;
 import jade.wrapper.StaleProxyException;
 import sajas.wrapper.ContainerController;
+import uchicago.src.sim.analysis.DataRecorder;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class Simulation {
 
     private ContainerController mainContainer;
     private OpenSequenceGraph plot;
+    private DataRecorder dr;
 
     private ArrayList<Auction> auctionsList;
     private ArrayList<User> users;
@@ -26,9 +28,10 @@ public class Simulation {
     private int[] aggressivenessList;
     private double[] delayList;
 
-    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type , String aggressiveness, String delay){
+    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , DataRecorder dr,  int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type , String aggressiveness, String delay){
         this.mainContainer = mainContainer;
         this.plot= plot;
+        this.dr = dr;
         this.manual_bid_nr = manual_bid_nr;
         this.bid_type = bid_type;
         this.auto_bid_nr = auto_bid_nr;
@@ -51,7 +54,7 @@ public class Simulation {
     public boolean setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList){
 
         for(int i= 0; i<(this.manual_bid_nr + this.smart_bid_nr + this.auto_bid_nr); i++ ){
-            User newUser = new User(i,"JohnDoe" + i,1000);
+            User newUser = new User(i,"JohnDoe" + i,1000,this.dr);
             addUser(newUser);
             usersList.add(newUser);
         }

@@ -19,13 +19,15 @@ import sajas.domain.DFService;
 import sajas.proto.AchieveREInitiator;
 import sajas.proto.SubscriptionInitiator;
 import sajas.wrapper.AgentController;
+import uchicago.src.sim.analysis.DataRecorder;
+import uchicago.src.sim.analysis.DataSource;
 
 import java.util.*;
 
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 
-public class User extends Agent {
+public class User extends Agent implements DataSource {
 
     // attributes
     private final int id;
@@ -36,12 +38,25 @@ public class User extends Agent {
     private Hashtable<String, Bid> bidsList;
     private Hashtable<String, AuctionInfo> auctionsList;
 
-    // private ArrayList;
+    private DataRecorder dr;
 
-    public User(int id, String username, double money) {
+    public User(int id, String username, double money, DataRecorder dr) {
         this.id = id;
         this.username = username;
         this.money = money;
+        this.dr = dr;
+    }
+
+    //data record funtions
+
+    public int getId(){
+        return this.id;
+    }
+    public int getAuction(){
+        return 1; //todo - last auction id bidded
+    }
+    public int getBid(){
+        return 2; //todo - last bidded value
     }
 
     @Override
@@ -69,6 +84,11 @@ public class User extends Agent {
         DFSubscribe();
         addBehaviour(new ListeningBehaviour());
 
+    }
+
+    @Override
+    public Object execute() {
+        return this;
     }
 
     class ListeningBehaviour extends CyclicBehaviour {
@@ -194,7 +214,7 @@ public class User extends Agent {
             auctionInfo.setCurrentBid(bidValue);
         }
         addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
-
+        dr.record();
     }
 
     private void subscribeAuction(String auctionId) {

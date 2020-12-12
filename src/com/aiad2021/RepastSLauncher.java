@@ -7,6 +7,7 @@ import jade.core.ProfileImpl;
 import sajas.core.Runtime;
 import sajas.wrapper.ContainerController;
 import sajas.sim.repast3.Repast3Launcher;
+import uchicago.src.sim.analysis.DataRecorder;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.engine.Schedule;
 
@@ -25,6 +26,7 @@ public class RepastSLauncher extends Repast3Launcher {
     private ArrayList<User> usersList;
 
     private OpenSequenceGraph plot;
+    private DataRecorder dr;
 
     private String bid_type;
     private int manual_agent_number;
@@ -67,6 +69,7 @@ public class RepastSLauncher extends Repast3Launcher {
     public void setup() {
         super.setup();  // crucial!
 
+        // property descriptors
         setBid_type("english");
         setManual_agent_number(1);
         setAuto_agent_number(1);
@@ -74,8 +77,6 @@ public class RepastSLauncher extends Repast3Launcher {
         setAggressiveness("");
         setDelay("");
 
-        // property descriptors
-        // ...
     }
 
     public int getWinningBid(){
@@ -85,30 +86,13 @@ public class RepastSLauncher extends Repast3Launcher {
     @Override
     public void begin() {
         super.begin();  // crucial!
-        //World w = new World(rt,profile,mainContainer,"world.csv");
-        // display surfaces, spaces, displays, plots, ...
-        // ...
 
-
-        // build
-        // model
-        usersList= new ArrayList<>();
-        auctionsList = new ArrayList<>();
-
-        if (plot != null) plot.dispose();
-        plot = new OpenSequenceGraph("Population", this);
-        plot.setAxisTitles("World cycles", "# of people");
-
-        plot.addSequence("Green - CC", this::getWinningBid, Color.GREEN, 10);
-        plot.display();
-
-        //build schedule
-        getSchedule().scheduleActionAt(100, plot, "step", Schedule.LAST);
-        getSchedule().execute();
+        buildModel();
 
         //build simulation ambient
         sim = new Simulation(mainContainer,
                 plot,
+                dr,
                 this.auto_agent_number,
                 this.smart_agent_number,
                 this.manual_agent_number,
@@ -116,16 +100,50 @@ public class RepastSLauncher extends Repast3Launcher {
                 this.aggressiveness,
                 this.delay
                 );
-        if(sim.setup_agents(this.usersList,this.auctionsList))
+        if(sim.setup_agents(this.usersList,this.auctionsList)){
             buildSchedule();
+            buildDataRecorder();
+        }
         else {
             exit(1);
         }
+
+
+
+    }
+
+    private void buildModel(){
+        // model
+        usersList= new ArrayList<>();
+        auctionsList = new ArrayList<>();
+
+        if (plot != null) plot.dispose();
+        plot = new OpenSequenceGraph("Auction", this);
+        plot.setAxisTitles("Time", "Bid Value");
+
+        plot.addSequence("English", this::getWinningBid, Color.GREEN, 10);
+        plot.display();
+
+        dr = new DataRecorder("data.csv",this);
 
     }
 
     private void buildSchedule(){
         getSchedule().scheduleActionAt(30*(this.auto_agent_number + this.smart_agent_number + this.manual_agent_number), this, "startSimulation");
+        getSchedule().scheduleActionAt(0.1, plot, "step", Schedule.LAST);
+        getSchedule().scheduleActionAtEnd(plot,"writeToFile");
+        getSchedule().scheduleActionAt(1,dr,"record");
+        getSchedule().scheduleActionAtEnd(dr,"writeToFile");
+
+    }
+
+    private void buildDataRecorder(){
+
+        for(User u: this.usersList){
+            dr.createNumericDataSource("lastBid "+u.getId(),u,"getBid" );
+            dr.createNumericDataSource("auction "+u.getId(),u,"getAuction" );
+
+        }
     }
 
     public void startSimulation(){
