@@ -70,6 +70,7 @@ public class Simulation {
 
         } catch (StaleProxyException e) {
             e.printStackTrace();
+            return false;
         }
 
         return true;
@@ -104,25 +105,30 @@ public class Simulation {
 
     }
 
-    public void start(){
+    public boolean start(){
 
         //WARNING - DOES NOT TOLERATE SPACES AFTER THE FINAL NUMBER
-        if(getAggressiveness().matches("(\\d+( \\d+)*)?") && getDelay().matches("(\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*)?")){
-            System.out.println(":) I was accepted");
-        }else System.out.println(":( I was not accepted");
+        if(!getAggressiveness().matches("(\\d+( \\d+)*)?") || !getDelay().matches("(\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*)?")){
+            System.out.println("Error: aggressiveness and delay need to be of type integer and double, respectfully");
+            return false;
+        }
 
-        dataSetUp();
+        if(!dataSetUp()){
+            return false;
+        }
 
         bidsGenerator();
+
+        return true;
     }
 
-    public void dataSetUp(){
+    public boolean dataSetUp(){
 
         if(!getAggressiveness().equals("")){
             int[] aggressiveness = Arrays.stream(getAggressiveness().split(" ")).mapToInt(Integer::parseInt).toArray();
             if(aggressiveness.length>this.auto_bid_nr ){
                 System.out.println("Error: aggressiveness arguments need to be less than the number of agents");
-                return;
+                return false;
             }
             System.arraycopy(aggressiveness, 0, getAggressivenessList(), 0, aggressiveness.length);
         }
@@ -131,10 +137,12 @@ public class Simulation {
             double[] delay = Arrays.stream(getDelay().split(" ")).mapToDouble(Double::parseDouble).toArray();
             if(delay.length>this.auto_bid_nr){
                 System.out.println("Error: delay arguments need to be less than the number of agents");
-                return;
+                return false;
             }
             System.arraycopy(delay, 0, getDelayList(), 0, delay.length);
         }
+
+        return true;
     }
 
     public void bidsGenerator(){
@@ -144,7 +152,6 @@ public class Simulation {
         //manual - can bid on every single type of auction
         for (;i< this.getManual_bid_nr() ; i++) {
             for (int j = 1; j <= getAuctionsList().size(); j++) {
-                System.out.println("User nr " + i);
                 users_list.get(i).handleMessage("bid "+ j + " 10");
             }
         }
@@ -154,22 +161,17 @@ public class Simulation {
             //auto
             int[] aggressiveness = getAggressivenessList();
             double[] delay = getDelayList();
-            System.out.println("Im starting in auto");
             for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr()); i++) {
                 for (int j = 1; j <= getAuctionsList().size(); j++) {
-                    System.out.println("User nr " + i);
                     if(getAuctionsList().get(j-1).getType().equals("english")) {
-                        System.out.println("im on english");
                         users_list.get(i).handleMessage("autobid " + j + " " + aggressiveness[i - this.getManual_bid_nr()] + " 200 " + delay[i - this.getManual_bid_nr()]);
                     }
                 }
             }
 
-            System.out.println("IM on smart");
             //smart
             for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr() + this.getSmart_bid_nr()); i++) {
                 for (int j = 1; j <= getAuctionsList().size(); j++) {
-                    System.out.println("User nr " + i);
                     users_list.get(i).handleMessage("smartbid " + j + " 300");
                 }
             }

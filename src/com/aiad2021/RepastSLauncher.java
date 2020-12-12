@@ -13,6 +13,8 @@ import uchicago.src.sim.engine.Schedule;
 import java.awt.*;
 import java.util.ArrayList;
 
+import static java.lang.System.exit;
+
 public class RepastSLauncher extends Repast3Launcher {
 
     private ContainerController mainContainer;
@@ -114,8 +116,11 @@ public class RepastSLauncher extends Repast3Launcher {
                 this.aggressiveness,
                 this.delay
                 );
-        sim.setup_agents(this.usersList,this.auctionsList);
-        buildSchedule();
+        if(sim.setup_agents(this.usersList,this.auctionsList))
+            buildSchedule();
+        else {
+            exit(1);
+        }
 
     }
 
@@ -124,7 +129,9 @@ public class RepastSLauncher extends Repast3Launcher {
     }
 
     public void startSimulation(){
-        sim.start();
+
+        if(!sim.start())
+            exit(1);
     }
 
     //for parameters to work, there needs to be a setter and a getter for each parameter
