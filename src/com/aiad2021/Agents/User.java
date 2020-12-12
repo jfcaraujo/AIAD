@@ -2,6 +2,7 @@ package com.aiad2021.Agents;
 
 import com.aiad2021.AuctionInfo;
 import com.aiad2021.view.CommunicationGUI;
+import com.sun.tools.jconsole.JConsoleContext;
 import jade.core.AID;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -35,6 +36,7 @@ public class User extends Agent implements DataSource {
     private double money;
     CommunicationGUI gui;
 
+    private String lastAuctionBid;
     private Hashtable<String, Bid> bidsList;
     private Hashtable<String, AuctionInfo> auctionsList;
 
@@ -53,10 +55,14 @@ public class User extends Agent implements DataSource {
         return this.id;
     }
     public int getAuction(){
-        return 1; //todo - last auction id bidded
+        if(this.lastAuctionBid.isEmpty()) return 0;
+        String tmp = this.lastAuctionBid.replace("Auction:","");
+        return Integer.parseInt(tmp); //todo - last auction id bidded
     }
     public int getBid(){
-        return 2; //todo - last bidded value
+        System.out.println(this.lastAuctionBid);
+        if(this.lastAuctionBid.isEmpty()) return 0;
+        return (int) Math.floor(this.auctionsList.get(this.lastAuctionBid).getCurrentBid()); //todo - last bidded value
     }
 
     @Override
@@ -71,6 +77,7 @@ public class User extends Agent implements DataSource {
 
         this.auctionsList = new Hashtable<>();
         this.bidsList = new Hashtable<>();
+        this.lastAuctionBid ="";
 
         gui = new CommunicationGUI(this);
         gui.setVisible(true);
@@ -213,8 +220,10 @@ public class User extends Agent implements DataSource {
             money = money - bidValue;
             auctionInfo.setCurrentBid(bidValue);
         }
+        this.lastAuctionBid = auctionId;
         addBehaviour(new FIPARequestBid(this, new ACLMessage(ACLMessage.REQUEST), auctionId, auctionInfo, bidValue));
         dr.record();
+        this.lastAuctionBid = "";
     }
 
     private void subscribeAuction(String auctionId) {

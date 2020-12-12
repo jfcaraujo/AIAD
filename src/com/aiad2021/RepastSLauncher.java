@@ -140,8 +140,8 @@ public class RepastSLauncher extends Repast3Launcher {
     private void buildDataRecorder(){
 
         for(User u: this.usersList){
-            dr.createNumericDataSource("lastBid "+u.getId(),u,"getBid" );
-            dr.createNumericDataSource("auction "+u.getId(),u,"getAuction" );
+            dr.createNumericDataSource("Last bid for User "+u.getId(),u,"getBid" );
+            dr.createNumericDataSource("Last auction for User "+u.getId(),u,"getAuction" );
 
         }
     }
