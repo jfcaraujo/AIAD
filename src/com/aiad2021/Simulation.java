@@ -28,9 +28,9 @@ public class Simulation {
     private int[] aggressivenessList;
     private double[] delayList;
 
-    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot , DataRecorder dr,  int auto_bid_nr, int smart_bid_nr, int manual_bid_nr , String bid_type , String aggressiveness, String delay){
+    public Simulation(ContainerController mainContainer, OpenSequenceGraph plot, DataRecorder dr, int auto_bid_nr, int smart_bid_nr, int manual_bid_nr, String bid_type, String aggressiveness, String delay) {
         this.mainContainer = mainContainer;
-        this.plot= plot;
+        this.plot = plot;
         this.dr = dr;
         this.manual_bid_nr = manual_bid_nr;
         this.bid_type = bid_type;
@@ -51,25 +51,26 @@ public class Simulation {
     }
 
 
-    public boolean setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList){
+    public boolean setup_agents(ArrayList<User> usersList, ArrayList<Auction> auctionsList) {
 
-        for(int i= 0; i<(this.manual_bid_nr + this.smart_bid_nr + this.auto_bid_nr); i++ ){
-            User newUser = new User(i,"JohnDoe" + i,1000,this.dr);
+        for (int i = 0; i < (this.manual_bid_nr + this.smart_bid_nr + this.auto_bid_nr); i++) {
+            User newUser = new User(i, "JohnDoe" + i, 1000, this.dr);
             addUser(newUser);
             usersList.add(newUser);
         }
 
-        if(!auctionSetup(auctionsList))
+        if (!auctionSetup(auctionsList))
             return false;
 
         try {
             //creates all agents
-            for (int i=0; i< usersList.size();i++) {
-                this.mainContainer.acceptNewAgent("JohnDoe"+i,usersList.get(i)).start();
+            for (int i = 0; i < usersList.size(); i++) {
+                this.mainContainer.acceptNewAgent("JohnDoe" + i, usersList.get(i)).start();
             }
             //creates bids
-            for (int i=1; i<= auctionsList.size();i++) {
-                this.mainContainer.acceptNewAgent("Auction:"+i,auctionsList.get(i-1)).start();            }
+            for (int i = 1; i <= auctionsList.size(); i++) {
+                this.mainContainer.acceptNewAgent("Auction:" + i, auctionsList.get(i - 1)).start();
+            }
 
         } catch (StaleProxyException e) {
             e.printStackTrace();
@@ -79,18 +80,18 @@ public class Simulation {
         return true;
     }
 
-    public boolean auctionSetup(ArrayList<Auction> auctionsList){
+    public boolean auctionSetup(ArrayList<Auction> auctionsList) {
 
         String[] auctions = this.getBid_type().split(" ");
 
-        if(auctions.length==0){
+        if (auctions.length == 0) {
             System.out.println("Error: Bid type needs to have at least one type of auction or else no auctions can be created");
             return false;
-        }else {
-            if (auctions.length>1 && !this.getBid_type().matches("(english|dutch)( (english|dutch))+")) {
+        } else {
+            if (auctions.length > 1 && !this.getBid_type().matches("(english|dutch)( (english|dutch))+")) {
                 System.out.println("Error: When declaring more than one auction, the only types available are english and dutch");
                 return false;
-            }else if(auctions.length==1 && !this.getBid_type().matches("(english|dutch|fprice|sprice)")){
+            } else if (auctions.length == 1 && !this.getBid_type().matches("(english|dutch|fprice|sprice)")) {
                 System.out.println("Error: Invalid type of auction. The existing types are english, dutch, fprice and sprice");
                 return false;
             }
@@ -98,7 +99,7 @@ public class Simulation {
 
         //only working with english bids so far
         for (int i = 1; i <= auctions.length; i++) {
-            Auction auction = new Auction(i,auctions[i-1],250,10,5,plot);
+            Auction auction = new Auction(i, auctions[i - 1], 250, 10, 5, plot);
 
             addAuction(auction);
             auctionsList.add(auction);//for some reason this is the only way that it updates this var
@@ -108,15 +109,15 @@ public class Simulation {
 
     }
 
-    public boolean start(){
+    public boolean start() {
 
         //WARNING - DOES NOT TOLERATE SPACES AFTER THE FINAL NUMBER
-        if(!getAggressiveness().matches("(\\d+( \\d+)*)?") || !getDelay().matches("(\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*)?")){
+        if (!getAggressiveness().matches("(\\d+( \\d+)*)?") || !getDelay().matches("(\\d+(\\.\\d+)?( \\d+(\\.\\d+)?)*)?")) {
             System.out.println("Error: aggressiveness and delay need to be of type integer and double, respectfully");
             return false;
         }
 
-        if(!dataSetUp()){
+        if (!dataSetUp()) {
             return false;
         }
 
@@ -125,20 +126,20 @@ public class Simulation {
         return true;
     }
 
-    public boolean dataSetUp(){
+    public boolean dataSetUp() {
 
-        if(!getAggressiveness().equals("")){
+        if (!getAggressiveness().equals("")) {
             int[] aggressiveness = Arrays.stream(getAggressiveness().split(" ")).mapToInt(Integer::parseInt).toArray();
-            if(aggressiveness.length>this.auto_bid_nr ){
+            if (aggressiveness.length > this.auto_bid_nr) {
                 System.out.println("Error: aggressiveness arguments need to be less than the number of agents");
                 return false;
             }
             System.arraycopy(aggressiveness, 0, getAggressivenessList(), 0, aggressiveness.length);
         }
 
-        if(!getDelay().equals("")) {
+        if (!getDelay().equals("")) {
             double[] delay = Arrays.stream(getDelay().split(" ")).mapToDouble(Double::parseDouble).toArray();
-            if(delay.length>this.auto_bid_nr){
+            if (delay.length > this.auto_bid_nr) {
                 System.out.println("Error: delay arguments need to be less than the number of agents");
                 return false;
             }
@@ -148,25 +149,25 @@ public class Simulation {
         return true;
     }
 
-    public void bidsGenerator(){
+    public void bidsGenerator() {
 
         ArrayList<User> users_list = this.getUsers();
-        int i= 0;
+        int i = 0;
         //manual - can bid on every single type of auction
-        for (;i< this.getManual_bid_nr() ; i++) {
+        for (; i < this.getManual_bid_nr(); i++) {
             for (int j = 1; j <= getAuctionsList().size(); j++) {
-                users_list.get(i).handleMessage("bid "+ j + " 10");
+                users_list.get(i).handleMessage("bid " + j + " " + i + "0");
             }
         }
 
         //auto and smart - can only bid in dutch and english auctions
-        if(!getBid_type().equals("fprice")&&!getBid_type().equals("sprice")) {
+        if (!getBid_type().equals("fprice") && !getBid_type().equals("sprice")) {
             //auto
             int[] aggressiveness = getAggressivenessList();
             double[] delay = getDelayList();
             for (; i < (this.getManual_bid_nr() + this.getAuto_bid_nr()); i++) {
                 for (int j = 1; j <= getAuctionsList().size(); j++) {
-                    if(getAuctionsList().get(j-1).getType().equals("english")) {
+                    if (getAuctionsList().get(j - 1).getType().equals("english")) {
                         users_list.get(i).handleMessage("autobid " + j + " " + aggressiveness[i - this.getManual_bid_nr()] + " 200 " + delay[i - this.getManual_bid_nr()]);
                     }
                 }
@@ -178,16 +179,17 @@ public class Simulation {
                     users_list.get(i).handleMessage("smartbid " + j + " 300");
                 }
             }
-        } else System.out.println("Warning: fprice or sprice was declared, cant bid with auto and smart agents with those bid types");
+        } else
+            System.out.println("Warning: fprice or sprice was declared, cant bid with auto and smart agents with those bid types");
     }
 
 
     //setters and getters
-    public void addUser(User user){
+    public void addUser(User user) {
         this.users.add(user);
     }
 
-    public void addAuction(Auction auction){
+    public void addAuction(Auction auction) {
         this.auctionsList.add(auction);
     }
 
