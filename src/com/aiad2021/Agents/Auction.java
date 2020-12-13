@@ -115,6 +115,9 @@ public class Auction extends Agent implements Drawable {
         System.out.println("auction setup done");
     }
 
+    public int getId(){
+        return this.id;
+    }
     public double getWinningPrice(){
         return this.winningPrice;
     }

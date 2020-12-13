@@ -79,8 +79,20 @@ public class RepastSLauncher extends Repast3Launcher {
 
     }
 
-    public int getWinningBid(){
+    public int getWinningBid0(){
         return (int) auctionsList.get(0).getWinningPrice();
+    }
+    public int getWinningBid1(){
+        return (int) auctionsList.get(1).getWinningPrice();
+    }
+    public int getWinningBid2(){
+        return (int) auctionsList.get(2).getWinningPrice();
+    }
+    public int getWinningBid3(){
+        return (int) auctionsList.get(3).getWinningPrice();
+    }
+    public int getWinningBid4(){
+        return (int) auctionsList.get(4).getWinningPrice();
     }
 
     @Override
@@ -101,6 +113,7 @@ public class RepastSLauncher extends Repast3Launcher {
                 this.delay
                 );
         if(sim.setup_agents(this.usersList,this.auctionsList)){
+            buildDisplay();
             buildSchedule();
             buildDataRecorder();
         }
@@ -112,6 +125,34 @@ public class RepastSLauncher extends Repast3Launcher {
 
     }
 
+    private void buildDisplay(){
+
+        for(int i =0; i < this.auctionsList.size(); i++){
+            Auction a = this.auctionsList.get(i);
+            switch(i){
+                case 0:
+                    plot.addSequence(a.getType()+"_Id:"+a.getId(), this::getWinningBid0, Color.GREEN, 10);
+                    break;
+                case 1:
+                    plot.addSequence(a.getType()+"_Id:"+a.getId(), this::getWinningBid1, Color.BLUE, 10);
+                    break;
+                case 2:
+                    plot.addSequence(a.getType()+"_Id:"+a.getId(), this::getWinningBid2, Color.RED, 10);
+                    break;
+                case 3:
+                    plot.addSequence(a.getType()+"_Id:"+a.getId(), this::getWinningBid3, Color.ORANGE, 10);
+                    break;
+                case 4:
+                    plot.addSequence(a.getType()+"_Id:"+a.getId(), this::getWinningBid4, Color.PINK, 10);
+                    break;
+                default:
+                    break;
+
+            }
+        }
+        plot.display();
+    }
+
     private void buildModel(){
         // model
         usersList= new ArrayList<>();
@@ -120,9 +161,6 @@ public class RepastSLauncher extends Repast3Launcher {
         if (plot != null) plot.dispose();
         plot = new OpenSequenceGraph("Auction", this);
         plot.setAxisTitles("Time", "Bid Value");
-
-        plot.addSequence("English", this::getWinningBid, Color.GREEN, 10);
-        plot.display();
 
         dr = new DataRecorder("data.csv",this);
 
